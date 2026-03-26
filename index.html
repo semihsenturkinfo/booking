@@ -244,11 +244,30 @@ const PACKAGES=[
 const SLOTS=[{id:'a',lbl:'9:00 AM',block:'morning'},{id:'b',lbl:'10:00 AM',block:'morning'},{id:'c',lbl:'2:00 PM',block:'afternoon'},{id:'d',lbl:'3:00 PM',block:'afternoon'}];
 const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MNS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-let st={vy:new Date().getFullYear(),vm:new Date().getMonth(),sd:null,ss:null,selPkg:null,bk:JSON.parse(localStorage.getItem('shoots_bk')||'[]'),wo:JSON.parse(localStorage.getItem('shoots_wo')||'[]'),blocked:JSON.parse(localStorage.getItem('shoots_blocked')||'{}')};
-function sv(){localStorage.setItem('shoots_bk',JSON.stringify(st.bk));localStorage.setItem('shoots_wo',JSON.stringify(st.wo));localStorage.setItem('shoots_blocked',JSON.stringify(st.blocked))}
+let st={vy:new Date().getFullYear(),vm:new Date().getMonth(),sd:null,ss:null,selPkg:null,wo:JSON.parse(localStorage.getItem('shoots_wo')||'[]'),blocked:JSON.parse(localStorage.getItem('shoots_blocked')||'{}'),notionBookings:[]};
+function sv(){localStorage.setItem('shoots_wo',JSON.stringify(st.wo));localStorage.setItem('shoots_blocked',JSON.stringify(st.blocked))}
+
+// Slot label → slot ID map for Notion data
+const SLOT_LABEL_MAP={'9:00 AM':'a','10:00 AM':'b','2:00 PM':'c','3:00 PM':'d'};
+
+async function loadNotionBookings(){
+  try{
+    const res=await fetch('/api/notion');
+    const data=await res.json();
+    st.notionBookings=data.bookings||[];
+  }catch(e){
+    console.error('Failed to load bookings from Notion:',e);
+    st.notionBookings=[];
+  }
+}
 function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function fmtD(d){const dn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];return dn[d.getDay()]+', '+MNS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
-function bookedSlots(ds){return st.bk.filter(b=>b.date===ds&&b.status!=='cancelled').map(b=>b.sid)}
+function bookedSlots(ds){
+  return st.notionBookings
+    .filter(b=>b.date===ds)
+    .map(b=>SLOT_LABEL_MAP[b.slot])
+    .filter(Boolean);
+}
 function adminBlocked(ds){return st.blocked[ds]||[]}
 function allUnavailable(ds){return[...new Set([...bookedSlots(ds),...adminBlocked(ds)])]}
 function blockedBlocks(ds){const u=allUnavailable(ds);const r={};SLOTS.forEach(s=>{if(u.includes(s.id))r[s.block]=true});return r}
@@ -282,7 +301,11 @@ function goS(n){
       steps.map((s,i)=>{const sn=numericOrder[s.n]||0;return(i?'<div class="pline"></div>':'')+'<div class="pstep'+(cur===sn?' on':cur>sn?' done':'')+'"><div class="pdot"></div>'+s.l+'</div>'}).join('')+
     '</div>';
   }
-  if(n===1){document.getElementById('s1sub').textContent=st.selPkg?st.selPkg.name+' — '+st.selPkg.price:'';const nb=document.getElementById('next-avail-btn');if(nb)nb.style.display='';renderCal()}
+  if(n===1){
+    document.getElementById('s1sub').textContent=st.selPkg?st.selPkg.name+' — '+st.selPkg.price:'';
+    const nb=document.getElementById('next-avail-btn');if(nb)nb.style.display='';
+    loadNotionBookings().then(()=>renderCal());
+  }
   if(n===3)buildReview();
 }
 
@@ -384,9 +407,23 @@ function buildReview(){
   );
   document.getElementById('revcard').innerHTML=rows.map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('');
 }
-function submit(){
+async function submit(){
   const sl=SLOTS.find(s=>s.id===st.ss);const orient=getOrientation();
   const b={id:Date.now(),date:fmt(st.sd),dateD:fmtD(st.sd),sid:st.ss,slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:g('ad'),sqft:g('sqft'),lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString()};
+
+  // Save to Notion
+  try {
+    const res = await fetch('/api/notion', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action:'create', booking:b})
+    });
+    const data = await res.json();
+    if (data.pageId) b.notionPageId = data.pageId;
+  } catch(e) {
+    console.error('Notion save failed:', e);
+  }
+
   st.bk.push(b);sv();
   document.getElementById('pendsum').innerHTML=[['Package',b.pkg],['Date',b.dateD],['Time',b.slot],['Name',b.name],['Address',b.addr]].map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('');
   goS(4);
@@ -419,7 +456,7 @@ function confirmSubmit(){
   submit();
 }
 
-renderPackages();goS(0);
+renderPackages();goS(0);loadNotionBookings();
 </script>
 </body>
 </html>
