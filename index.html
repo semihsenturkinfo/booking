@@ -372,7 +372,7 @@ function selDate(d){
     const isBlocked=!!blk[s.block];
     el.innerHTML='<div>'+s.lbl+'</div>'+(isBlocked?'<div class="slot-sub">Unavailable</div>':'');
     if(isBlocked){el.classList.add('bkd')}
-    else{el.onclick=()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');st.ss=s.id;document.getElementById('bs1').disabled=false}}
+    else{el.onclick=()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');st.ss=s.id;document.getElementById('bs1').disabled=false;setTimeout(()=>{document.getElementById('bs1').scrollIntoView({behavior:'smooth',block:'center'})},50);}}
     sg.appendChild(el);
   });
 }
