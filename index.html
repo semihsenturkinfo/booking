@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Shoot</title>
+<style>
+:root{--bg:#fff;--bg2:#f5f5f4;--bg3:#fafaf9;--text:#1c1c1b;--text2:#6b7280;--text3:#9ca3af;--border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);--radius:10px;--rsm:7px}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a19;--bg2:#242422;--bg3:#1f1f1e;--text:#f0ede8;--text2:#9ca3af;--text3:#6b7280;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2)}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+.wrap{max-width:700px;margin:0 auto;padding:2rem 1rem 4rem}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.ttl{font-size:18px;font-weight:600;margin-bottom:4px}
+.sub{font-size:14px;color:var(--text2);margin-bottom:1.25rem}
+.brow{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem}
+.btn{padding:10px 20px;border-radius:var(--rsm);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
+.btnp{background:var(--text);color:var(--bg);border:none}.btnp:hover{opacity:.85}.btnp:disabled{opacity:.35;cursor:default}
+.btns{background:none;border:1px solid var(--border2);color:var(--text)}.btns:hover{background:var(--bg2)}
+.pkg-grid{display:flex;flex-direction:column;gap:10px}
+.pkg-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.25rem;cursor:pointer;transition:all .15s;position:relative}
+.pkg-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.pkg-card.pop{border-color:#2563eb}
+.pop-badge{position:absolute;top:-1px;right:14px;background:#2563eb;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:0 0 6px 6px;letter-spacing:.03em}
+.pkg-name{font-size:16px;font-weight:600;margin-bottom:4px}
+.pkg-desc{font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5}
+.pkg-meta{display:flex;gap:14px;align-items:baseline}
+.pkg-price{font-size:16px;font-weight:600}
+.pkg-dur{font-size:13px;color:var(--text2)}
+.det-name{font-size:22px;font-weight:700;margin-bottom:6px}
+.det-price{font-size:24px;font-weight:700}
+.det-dur{font-size:14px;color:var(--text2)}
+.det-stitle{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:1.1rem}
+.det-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px}
+.det-list li{font-size:14px;padding-left:20px;position:relative;line-height:1.5}
+.det-list li::before{content:'✓';position:absolute;left:0;color:#16a34a;font-weight:600}
+.det-note{font-size:13px;color:var(--text2);line-height:1.6;background:var(--bg2);border-radius:var(--rsm);padding:.85rem 1rem;border-left:3px solid var(--border2);margin-top:1rem}
+.mnav{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.mnav button{background:none;border:1px solid var(--border2);border-radius:var(--rsm);padding:5px 12px;cursor:pointer;color:var(--text);font-size:14px}
+.mnav button:hover{background:var(--bg2)}
+.mlbl{font-size:15px;font-weight:600}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.ch{font-size:11px;color:var(--text3);text-align:center;padding:5px 0;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.cd{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;border-radius:var(--rsm);cursor:pointer;border:1px solid transparent;transition:all .1s;color:var(--text);gap:2px}
+.cd:hover:not(.dis):not(.emp):not(.full):not(.admin-closed){background:var(--border2);border-color:var(--border2);color:var(--text)}
+.cd.sel{background:var(--text);color:var(--bg)}.cd.sel .dot{background:var(--bg);opacity:.6}
+.cd.dis{color:var(--text3);cursor:default;text-decoration:line-through}.cd.emp{cursor:default}
+.cd.today{border-color:var(--border2)}.cd.full{cursor:default;color:var(--text3)}.cd.admin-closed{color:var(--text3);cursor:default}
+.cd.partial .dot{display:block}
+.dot{display:none;width:4px;height:4px;border-radius:50%;background:var(--text2);opacity:.5}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.li{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.lsw{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:1rem}
+.slot{padding:11px 14px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:all .12s;color:var(--text);background:var(--bg)}
+.slot:hover:not(.bkd):not(.sel){background:var(--bg2)}
+.slot.sel{background:var(--text);color:var(--bg);border-color:var(--text)}.slot.sel:hover{background:var(--text);color:var(--bg)}
+.slot.bkd{color:var(--text3);cursor:default;background:var(--bg2);border-style:dashed;font-weight:400}
+.slot-sub{font-size:11px;margin-top:3px;opacity:.65;font-weight:400}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fgp{display:flex;flex-direction:column;gap:5px}
+.fgp.full{grid-column:1/-1}
+.fgp label{font-size:13px;color:var(--text2);font-weight:500}
+input,select,textarea{font-family:inherit;font-size:14px;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:8px 10px;width:100%;transition:border-color .15s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--text)}
+select{cursor:pointer}
+textarea{min-height:80px;resize:vertical}
+.cdet{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-size:14px;gap:12px}
+.cdet span:first-child{color:var(--text2);white-space:nowrap}
+.cdet span:last-child{text-align:right}
+.pendbox{background:#fef3c7;border:1px solid #fde68a;border-radius:var(--radius);padding:1.5rem;text-align:center;margin-bottom:1rem}
+.pendtitle{font-size:17px;font-weight:600;color:#92400e;margin-bottom:6px}
+.pendsub{font-size:14px;color:#b45309}
+@media(prefers-color-scheme:dark){.pendbox{background:#292108;border-color:#78350f}.pendtitle{color:#fbbf24}.pendsub{color:#d97706}}
+.progress{display:flex;align-items:center;margin-bottom:1.25rem}
+.pstep{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3)}
+.pstep.on{color:var(--text2);font-weight:500}.pstep.done{color:var(--text3)}
+.pdot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.pstep.on .pdot{background:var(--text);width:8px;height:8px}
+.pline{flex:1;height:1px;background:var(--border);margin:0 8px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:flex-start;justify-content:center;padding:4rem 1rem 1rem}
+.modal-overlay.on{display:flex}
+.modal{background:var(--bg);border-radius:var(--radius);padding:1.5rem;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:4px}
+.modal-badge{display:inline-block;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-bottom:12px}
+@media(prefers-color-scheme:dark){.modal-badge{background:#292108;color:#fbbf24}}
+.modal-body{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1.25rem}
+.modal-check{display:flex;align-items:flex-start;gap:10px;background:var(--bg2);border-radius:var(--rsm);padding:.85rem 1rem;margin-bottom:1.25rem;cursor:pointer}
+.modal-check input[type=checkbox]{width:16px;height:16px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:var(--text)}
+.modal-check-label{font-size:13px;color:var(--text);line-height:1.5;cursor:pointer}
+
+  .fg{grid-template-columns:1fr}.fgp.full{grid-column:1}
+  .wrap{padding:1.25rem .75rem 3rem}.pkg-card{padding:.9rem 1rem}.card{padding:1rem}
+  .brow{gap:8px}.btn{padding:10px 16px;font-size:14px}
+  .sgrid{grid-template-columns:repeat(2,1fr)}
+  .det-name{font-size:18px}.det-price{font-size:20px}
+  .cgrid{gap:2px}.cd{font-size:12px}.mnav button{padding:4px 8px;font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="margin-bottom:2rem">
+    <h1 style="font-size:22px;font-weight:700;margin-bottom:4px">Book a Real Estate Shoot</h1>
+    <p style="font-size:14px;color:var(--text2)">Professional photography &amp; video for your listing</p>
+  </div>
+
+  <div id="s0">
+    <p class="ttl">Choose your package</p>
+    <p class="sub">Select the package that best fits your listing.</p>
+    <div class="pkg-grid" id="pkg-grid"></div>
+  </div>
+  <div id="s0b" style="display:none">
+    <button class="btns btn" style="margin-bottom:1rem;padding:6px 14px;font-size:13px" onclick="goS(0)">&larr; All packages</button>
+    <div class="card" id="pkg-detail"></div>
+    <div style="position:sticky;bottom:0;background:var(--bg3);padding:1rem 0 0.5rem;margin-top:0.5rem">
+      <button class="btnp btn" style="width:100%;padding:14px;font-size:16px;border-radius:var(--rsm)" onclick="goS(1)">Book</button>
+    </div>
+  </div>
+  <div id="s1" style="display:none">
+    <div id="pb1"></div>
+    <p class="ttl">Pick a date &amp; time</p>
+    <p class="sub" id="s1sub"></p>
+    <div class="card">
+      <div class="mnav">
+        <button onclick="chMo(-1)">&#8592;</button>
+        <span class="mlbl" id="mlbl"></span>
+        <button onclick="chMo(1)">&#8594;</button>
+      </div>
+      <div class="cgrid" id="cgrid"></div>
+    </div>
+    <div style="margin-bottom:1rem">
+      <button id="next-avail-btn" class="btnp btn" style="width:100%;padding:11px;font-size:14px" onclick="goNextAvailable()">Go to next available</button>
+    </div>
+    <div class="card" id="slotcard" style="display:none">
+      <p style="font-size:14px;font-weight:600;margin-bottom:2px" id="slotdate"></p>
+      <p style="font-size:13px;color:var(--text2)">Select a time slot</p>
+      <div class="sgrid" id="sgrid"></div>
+    </div>
+    <div class="brow">
+      <button class="btn btns" onclick="goS('0b')">&larr; Back</button>
+      <button class="btn btnp" id="bs1" disabled onclick="goS(2)">Continue &rarr;</button>
+    </div>
+  </div>
+  <div id="s2" style="display:none">
+    <div id="pb2"></div>
+    <p class="ttl">About the listing</p>
+    <p class="sub">Tell us about the property.</p>
+    <div class="card">
+      <div class="fg">
+        <div class="fgp full"><label>Listing address</label><input type="text" id="ad" placeholder="123 Main St, Kitchener, ON" oninput="ck2a()"></div>
+        <div class="fgp">
+          <label>Approximate square footage</label>
+          <select id="sqft" onchange="ck2a()">
+            <option value="">Select...</option>
+            <option>Under 2,500 sq ft</option>
+            <option>Above 2,500 sq ft</option>
+            <option>Not sure</option>
+          </select>
+        </div>
+        <div class="fgp" id="orientation-group" style="display:none">
+          <label>Video orientation</label>
+          <select id="orientation" onchange="ck2a()">
+            <option value="">Select...</option>
+            <option>Vertical (Instagram &amp; TikTok)</option>
+            <option>Horizontal (YouTube)</option>
+            <option>Both (+CA$100)</option>
+          </select>
+        </div>
+        <div class="fgp full"><label>Lockbox code or access instructions (optional)</label><input type="text" id="lockbox" placeholder="e.g. Lockbox #1234 on front door handle"></div>
+        <div class="fgp full"><label>Package</label><input type="text" id="pk" readonly style="background:var(--bg2);cursor:default;color:var(--text2)"></div>
+      </div>
+    </div>
+    <div class="brow">
+      <button class="btn btns" onclick="goS(1)">&larr; Back</button>
+      <button class="btn btnp" id="bs2a" disabled onclick="goS('2b')">Next &rarr;</button>
+    </div>
+  </div>
+  <div id="s2b" style="display:none">
+    <div id="pb2b"></div>
+    <p class="ttl">Your details</p>
+    <p class="sub">How should we reach you?</p>
+    <div class="card">
+      <div class="fg">
+        <div class="fgp full"><label>Full name</label><input type="text" id="fn" placeholder="Jane Smith" oninput="ck2b()"></div>
+        <div class="fgp"><label>Phone</label><input type="tel" id="ph" placeholder="(519) 555-0100" oninput="ck2b()"></div>
+        <div class="fgp"><label>Email</label><input type="email" id="em" placeholder="jane@realty.com" oninput="ck2b()"></div>
+        <div class="fgp full"><label>Notes (optional)</label><textarea id="nt" placeholder="Parking info, special requests..."></textarea></div>
+      </div>
+    </div>
+    <div class="brow">
+      <button class="btn btns" onclick="goS(2)">&larr; Back</button>
+      <button class="btn btnp" id="bs2b" disabled onclick="goS(3)">Review &rarr;</button>
+    </div>
+  </div>
+  <div id="s3" style="display:none">
+    <p class="ttl">Review booking</p>
+    <p class="sub">Check everything before you submit.</p>
+    <div class="card" id="revcard"></div>
+    <div class="brow">
+      <button class="btn btns" onclick="goS(2)">&larr; Back</button>
+      <button class="btn btnp" onclick="openTurnaroundModal()">Submit booking</button>
+    </div>
+  </div>
+  <div id="s4" style="display:none">
+    <div class="pendbox">
+      <div style="font-size:28px;margin-bottom:10px">&#9203;</div>
+      <p class="pendtitle">Booking request sent!</p>
+      <p class="pendsub">Your request is pending confirmation. You'll receive an email once it's approved.</p>
+    </div>
+    <div class="card" id="pendsum"></div>
+    <div style="margin-top:1rem;text-align:center"><button class="btn btns" onclick="resetBooking()">Book another shoot</button></div>
+  </div>
+</div>
+
+<!-- Turnaround modal -->
+<div class="modal-overlay" id="turnaround-modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-badge">Spring Market Update</div>
+    <p class="modal-title">Please review before booking</p>
+    <div class="modal-body">
+      Video turnaround is <strong>3 business days</strong> (Monday–Friday).<br><br>
+      Photos &amp; iGUIDE are delivered <strong>next day</strong>, no changes there.
+    </div>
+    <label class="modal-check" for="turnaround-cb">
+      <input type="checkbox" id="turnaround-cb" onchange="updateModalBtn()">
+      <span class="modal-check-label">I understand and agree to the current turnaround times.</span>
+    </label>
+    <button class="btn btnp" id="modal-submit-btn" style="width:100%;padding:12px;font-size:15px" disabled onclick="confirmSubmit()">Submit booking</button>
+  </div>
+</div>
+
+<script>
+const STD_PRICING=[{label:'Up to 2,500 sq ft',note:'included'},{label:'2,500 – 3,500 sq ft',note:'+$150'},{label:'3,500 – 4,500 sq ft',note:'+$175'},{label:'4,500 sq ft and up',note:'+$200'}];
+const STD_TRAVEL=['<strong>First 50 km (round-trip) from Kitchener are included.</strong>','Beyond that, mileage is billed at $0.70/km (round trip).','For drives over 2 hours (one way), a long-distance travel fee applies ($100 + HST).'];
+const PACKAGES=[
+  {id:'ultimate',name:'Ultimate Listing Package',price:'CA$1,100 + HST',duration:'3 hr 30 min',pop:false,short:'Our most complete package — everything we offer, bundled into one premium solution!',includes:['Interior &amp; Exterior Photo Shoot','Interior &amp; Exterior Video Shoot (Vertical or Horizontal)','Drone Photos &amp; Drone Video','Short Agent Intro Video','iGUIDE Virtual Tour','Floor Plan','All Add-Ons Included (AI transitions, high-end edits, video carousels, etc.)','Full Editing &amp; Post-Production (colour correction, colour grading, final exports)','<strong>First 50 km round-trip from Kitchener included</strong>'],pricing:STD_PRICING,travel:STD_TRAVEL,},
+  {id:'allinone',name:'All-In-One',price:'CA$650 + HST',duration:'2 hr 30 min',pop:true,short:'Everything your listing needs — photos, video, drone, iGUIDE, floor plan, and editing, all in one session.',includes:['Interior &amp; Exterior Photo Shoot','Interior &amp; Exterior Video Shoot (Vertical or Horizontal)','Drone Footage (Video &amp; Photos)','Short Agent Intro','iGUIDE Virtual Tour','Floor Plan','Editing &amp; Post-Production (colour correction, colour grading, final exports)','<strong>First 50 km (round-trip) from Kitchener included</strong>'],pricing:STD_PRICING,travel:STD_TRAVEL,},
+  {id:'photoiguide',name:'Photo + iGUIDE + Drone',price:'CA$400 + HST',duration:'1 hr 30 min',pop:false,short:'Photos, virtual tour, floor plan, and drone — everything a listing needs for a strong digital presence.',includes:['Interior &amp; Exterior Photo Shoot','Drone Footage (Photos)','iGUIDE Virtual Tour','Floor Plan','Editing &amp; Post-Production (colour correction, colour grading, final exports)','<strong>First 50 km (round-trip) from Kitchener included</strong>'],pricing:STD_PRICING,travel:STD_TRAVEL,},
+  {id:'video',name:'Listing Video',price:'CA$300 + HST',duration:'1 hr 30 min',pop:false,short:'Video-only package for listings that already have photos.',includes:['Interior &amp; Exterior Video Shoot (Vertical or Horizontal)','Drone Footage (Video)','Short Agent Intro','Editing &amp; Post-Production (colour correction, colour grading, final exports)','1 Video (vertical or horizontal)','<strong>First 50 km (round-trip) from Kitchener included</strong>'],pricing:STD_PRICING,travel:STD_TRAVEL,},
+  {id:'photos',name:'Listing Photos',price:'CA$250 + HST',duration:'1 hr 30 min',pop:false,short:'Professional interior and exterior photography with drone.',includes:['Interior &amp; Exterior Photo Shoot','Drone Footage (Photos)','Editing &amp; Post-Production (colour correction, colour grading, final exports)','<strong>First 50 km (round-trip) from Kitchener included</strong>'],pricing:STD_PRICING,travel:STD_TRAVEL,},
+  {id:'iguide',name:'iGUIDE Virtual Tour & Floor Plans',price:'CA$250 + HST',duration:'1 hr 30 min',pop:false,short:'Interactive virtual tour and accurate floor plans for your listing.',includes:['iGUIDE Virtual Tour','Floor Plan'],pricing:STD_PRICING,travel:STD_TRAVEL,},
+];
+const SLOTS=[{id:'a',lbl:'9:00 AM',block:'morning'},{id:'b',lbl:'10:00 AM',block:'morning'},{id:'c',lbl:'2:00 PM',block:'afternoon'},{id:'d',lbl:'3:00 PM',block:'afternoon'}];
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MNS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let st={vy:new Date().getFullYear(),vm:new Date().getMonth(),sd:null,ss:null,selPkg:null,bk:[],wo:JSON.parse(localStorage.getItem('shoots_wo')||'[]'),blocked:JSON.parse(localStorage.getItem('shoots_blocked')||'{}'),notionBookings:[]};
+function sv(){localStorage.setItem('shoots_wo',JSON.stringify(st.wo));localStorage.setItem('shoots_blocked',JSON.stringify(st.blocked))}
+
+// Slot label → slot ID map for Notion data
+const SLOT_LABEL_MAP={'9:00 AM':'a','10:00 AM':'b','2:00 PM':'c','3:00 PM':'d'};
+
+async function loadNotionBookings(){
+  try{
+    const res=await fetch('/api/notion',{headers:{'x-api-secret':'xK9mPqR3nT8vL2wY'}});
+    const data=await res.json();
+    st.notionBookings=data.bookings||[];
+  }catch(e){
+    console.error('Failed to load bookings from Notion:',e);
+    st.notionBookings=[];
+  }
+}
+function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmtD(d){const dn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];return dn[d.getDay()]+', '+MNS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
+function bookedSlots(ds){
+  return st.notionBookings
+    .filter(b=>b.date===ds)
+    .map(b=>SLOT_LABEL_MAP[b.slot])
+    .filter(Boolean);
+}
+function adminBlocked(ds){return st.blocked[ds]||[]}
+function allUnavailable(ds){return[...new Set([...bookedSlots(ds),...adminBlocked(ds)])]}
+function blockedBlocks(ds){const u=allUnavailable(ds);const r={};SLOTS.forEach(s=>{if(u.includes(s.id))r[s.block]=true});return r}
+
+function renderPackages(){document.getElementById('pkg-grid').innerHTML=PACKAGES.map(p=>`<div class="pkg-card${p.pop?' pop':''}" onclick="showPkgDetail('${p.id}')">${p.pop?'<div class="pop-badge">MOST POPULAR</div>':''}<div class="pkg-name">${p.name}</div><div class="pkg-desc">${p.short}</div><div class="pkg-meta"><span class="pkg-price">${p.price}</span><span class="pkg-dur">· ${p.duration}</span></div></div>`).join('')}
+
+function showPkgDetail(id){
+  const p=PACKAGES.find(x=>x.id===id);if(!p)return;st.selPkg=p;
+  let html='<div class="det-name">'+p.name+'</div><div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px"><span class="det-price">'+p.price+'</span><span class="det-dur">'+p.duration+'</span></div><p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:4px">'+p.short+'</p><div class="det-stitle">What\'s included</div><ul class="det-list">'+p.includes.map(i=>'<li>'+i+'</li>').join('')+'</ul>';
+  if(p.pricing){html+='<div class="det-stitle" style="margin-top:1.1rem">Property size pricing</div><div style="display:flex;flex-direction:column;gap:6px">'+p.pricing.map(r=>'<div style="display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-top:1px solid var(--border)"><span>'+r.label+'</span><span style="font-weight:500;color:'+(r.note==='included'?'#16a34a':'var(--text)')+'">'+r.note+'</span></div>').join('')+'</div>'}
+  if(p.travel){html+='<div class="det-stitle" style="margin-top:1.1rem">Travel</div><div style="display:flex;flex-direction:column;gap:6px">'+p.travel.map(t=>'<p style="font-size:13px;color:var(--text2);line-height:1.6">'+t+'</p>').join('')+'</div>'}
+  if(p.note)html+='<div class="det-note" style="margin-top:1rem">'+p.note+'</div>';
+  document.getElementById('pkg-detail').innerHTML=html;
+  document.getElementById('pk').value=p.name+' — '+p.price;
+  const hasVideo=['ultimate','allinone','video'].includes(p.id);
+  document.getElementById('orientation-group').style.display=hasVideo?'block':'none';
+  const orientEl=document.getElementById('orientation');if(orientEl)orientEl.selectedIndex=0;
+  goS('0b');
+}
+
+function goS(n){
+  ['s0','s0b','s1','s2','s2b','s3','s4'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('s'+n).style.display='block';
+  const steps=[{n:1,l:'Date & time'},{n:2,l:'Listing'},{n:'2b',l:'Your info'},{n:3,l:'Review'}];
+  const order=['s0','s0b','s1','s2','s2b','s3','s4'];
+  const numericOrder={1:1,'2':2,'2b':3,3:4};
+  const cur=numericOrder[n]||0;
+  const pbarId=n===1?'pb1':n===2?'pb2':n==='2b'?'pb2b':null;
+  if(pbarId){
+    document.getElementById(pbarId).innerHTML='<div class="progress">'+
+      steps.map((s,i)=>{const sn=numericOrder[s.n]||0;return(i?'<div class="pline"></div>':'')+'<div class="pstep'+(cur===sn?' on':cur>sn?' done':'')+'"><div class="pdot"></div>'+s.l+'</div>'}).join('')+
+    '</div>';
+  }
+  if(n===1){
+    document.getElementById('s1sub').textContent=st.selPkg?st.selPkg.name+' — '+st.selPkg.price:'';
+    const nb=document.getElementById('next-avail-btn');if(nb)nb.style.display='';
+    loadNotionBookings().then(()=>renderCal());
+  }
+  if(n===3)buildReview();
+}
+
+function goNextAvailable(){
+  const tod=new Date();tod.setHours(0,0,0,0);
+  const cutoff=new Date(tod);cutoff.setDate(cutoff.getDate()+1);
+  // Search up to 6 months ahead
+  for(let i=0;i<180;i++){
+    const td=new Date(cutoff);td.setDate(cutoff.getDate()+i);
+    const day=td.getDay();
+    const ds=fmt(td);
+    if(day===0||day===6){if(!st.wo.includes(ds))continue}
+    const blk=blockedBlocks(ds);
+    if(blk['morning']&&blk['afternoon'])continue;
+    // Found — jump to that month and select it
+    st.vm=td.getMonth();st.vy=td.getFullYear();
+    renderCal();
+    selDate(td);
+    document.getElementById('next-avail-btn').style.display='none';
+    setTimeout(()=>{const el=document.getElementById('slotcard');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})},50);
+    return;
+  }
+  alert('No available dates found in the next 6 months.');
+}
+
+function chMo(d){st.vm+=d;if(st.vm>11){st.vm=0;st.vy++}if(st.vm<0){st.vm=11;st.vy--}renderCal()}
+
+function renderCal(){
+  document.getElementById('mlbl').textContent=MN[st.vm]+' '+st.vy;
+  const g=document.getElementById('cgrid');g.innerHTML='';
+  ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d=>{const h=document.createElement('div');h.className='ch';h.textContent=d;g.appendChild(h)});
+  const offset=(new Date(st.vy,st.vm,1).getDay()+6)%7;
+  const dim=new Date(st.vy,st.vm+1,0).getDate();
+  const tod=new Date();tod.setHours(0,0,0,0);
+  const cutoff=new Date(tod);cutoff.setDate(cutoff.getDate()+1);
+  for(let i=0;i<offset;i++){const e=document.createElement('div');e.className='cd emp';g.appendChild(e)}
+  for(let d=1;d<=dim;d++){
+    const el=document.createElement('div');el.className='cd';
+    const td=new Date(st.vy,st.vm,d);const ds=fmt(td);
+    const bkd=bookedSlots(ds);const blk=blockedBlocks(ds);
+    const past=td<cutoff;const isWE=(td.getDay()===0||td.getDay()===6)&&!st.wo.includes(ds);
+    const ns=document.createElement('span');ns.textContent=d;el.appendChild(ns);
+    const dot=document.createElement('div');dot.className='dot';el.appendChild(dot);
+    const allAdminClosed=adminBlocked(ds).length>=SLOTS.length;
+    const allFull=blk['morning']&&blk['afternoon'];
+    if(past||isWE){el.classList.add('dis')}
+    else if(allAdminClosed){el.classList.add('admin-closed')}
+    else if(allFull){el.classList.add('full')}
+    else{if(bookedSlots(ds).length>0)el.classList.add('partial');el.onclick=()=>selDate(td);if(st.sd&&fmt(st.sd)===ds)el.classList.add('sel')}
+    if(fmt(td)===fmt(tod))el.classList.add('today');
+    g.appendChild(el);
+  }
+}
+
+function selDate(d){
+  st.sd=d;st.ss=null;document.getElementById('bs1').disabled=true;renderCal();
+  const ds=fmt(d);const blk=blockedBlocks(ds);
+  document.getElementById('slotdate').textContent=fmtD(d);
+  document.getElementById('slotcard').style.display='block';
+  const sg=document.getElementById('sgrid');sg.innerHTML='';
+  SLOTS.forEach(s=>{
+    const el=document.createElement('div');el.className='slot';
+    const isBlocked=!!blk[s.block];
+    el.innerHTML='<div>'+s.lbl+'</div>'+(isBlocked?'<div class="slot-sub">Unavailable</div>':'');
+    if(isBlocked){el.classList.add('bkd')}
+    else{el.onclick=()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');st.ss=s.id;document.getElementById('bs1').disabled=false}}
+    sg.appendChild(el);
+  });
+}
+
+function ck2a(){
+  const ok=['ad','sqft'].every(id=>document.getElementById(id).value.trim()!=='');
+  const orientGrp=document.getElementById('orientation-group');
+  const orientOk=orientGrp.style.display==='none'||document.getElementById('orientation').value!=='';
+  document.getElementById('bs2a').disabled=!(ok&&orientOk);
+}
+function ck2b(){
+  const ok=['fn','ph','em'].every(id=>document.getElementById(id).value.trim()!=='');
+  document.getElementById('bs2b').disabled=!ok;
+}
+function g(id){return document.getElementById(id).value.trim()}
+function getOrientation(){const el=document.getElementById('orientation');return el&&el.value?el.value:null}
+function buildReview(){
+  const sl=SLOTS.find(s=>s.id===st.ss);const orient=getOrientation();
+  const rows=[
+    ['Package',g('pk')],
+    ['Address',g('ad')],
+    ['Approx. sq ft',g('sqft')],
+    ['Lockbox / access',g('lockbox')||'—'],
+  ];
+  if(orient)rows.push(['Video orientation',orient]);
+  rows.push(
+    ['Date',fmtD(st.sd)],
+    ['Time',sl?sl.lbl:''],
+    ['Name',g('fn')],
+    ['Phone',g('ph')],
+    ['Email',g('em')],
+    ['Notes',g('nt')||'—']
+  );
+  document.getElementById('revcard').innerHTML=rows.map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('');
+}
+async function submit(){
+  const sl=SLOTS.find(s=>s.id===st.ss);const orient=getOrientation();
+  const b={id:Date.now(),date:fmt(st.sd),dateD:fmtD(st.sd),sid:st.ss,slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:g('ad'),sqft:g('sqft'),lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString()};
+  try {
+    const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'create',booking:b})});
+    const data=await res.json();
+    if(data.pageId)b.notionPageId=data.pageId;
+  }catch(e){console.error('Notion save failed:',e)}
+  st.bk.push(b);sv();
+  document.getElementById('pendsum').innerHTML=[['Package',b.pkg],['Date',b.dateD],['Time',b.slot],['Name',b.name],['Address',b.addr]].map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('');
+  goS(4);
+}
+function resetBooking(){
+  st.sd=null;st.ss=null;st.selPkg=null;
+  ['fn','ph','em','ad','lockbox','nt'].forEach(id=>document.getElementById(id).value='');
+  ['sqft','orientation'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0});
+  document.getElementById('pk').value='';
+  document.getElementById('orientation-group').style.display='none';
+  document.getElementById('slotcard').style.display='none';
+  document.getElementById('bs1').disabled=true;
+  document.getElementById('bs2a').disabled=true;
+  document.getElementById('bs2b').disabled=true;
+  goS(0);
+}
+function openTurnaroundModal(){
+  document.getElementById('turnaround-cb').checked=false;
+  document.getElementById('modal-submit-btn').disabled=true;
+  document.getElementById('turnaround-modal').classList.add('on');
+}
+function updateModalBtn(){
+  document.getElementById('modal-submit-btn').disabled=!document.getElementById('turnaround-cb').checked;
+}
+function handleOverlayClick(e){
+  if(e.target===document.getElementById('turnaround-modal'))document.getElementById('turnaround-modal').classList.remove('on');
+}
+function confirmSubmit(){
+  document.getElementById('turnaround-modal').classList.remove('on');
+  submit();
+}
+
+renderPackages();goS(0);loadNotionBookings();
+</script>
+</body>
+</html>
