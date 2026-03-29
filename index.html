@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Book a Shoot</title>
 <style>
-:root{--bg:#fff;--bg2:#f5f5f4;--bg3:#fafaf9;--text:#1c1c1b;--text2:#6b7280;--text3:#9ca3af;--border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);--radius:10px;--rsm:7px}
-@media(prefers-color-scheme:dark){:root{--bg:#1a1a19;--bg2:#242422;--bg3:#1f1f1e;--text:#f0ede8;--text2:#9ca3af;--text3:#6b7280;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2)}}
+:root{--bg:#1a1a19;--bg2:#242422;--bg3:#1f1f1e;--text:#f0ede8;--text2:#9ca3af;--text3:#6b7280;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);--radius:10px;--rsm:7px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
 .wrap{max-width:700px;margin:0 auto;padding:2rem 1rem 4rem}
@@ -20,8 +19,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pkg-grid{display:flex;flex-direction:column;gap:10px}
 .pkg-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.25rem;cursor:pointer;transition:all .15s;position:relative}
 .pkg-card:hover{border-color:var(--border2);transform:translateY(-1px)}
-.pkg-card.pop{border-color:#2563eb}
-.pop-badge{position:absolute;top:-1px;right:14px;background:#2563eb;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:0 0 6px 6px;letter-spacing:.03em}
+.pkg-card.pop{border-color:#7E8C54}
+.pop-badge{position:absolute;top:-1px;right:14px;background:#7E8C54;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:0 0 6px 6px;letter-spacing:.03em}
 .pkg-name{font-size:16px;font-weight:600;margin-bottom:4px}
 .pkg-desc{font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5}
 .pkg-meta{display:flex;gap:14px;align-items:baseline}
@@ -61,17 +60,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .fgp{display:flex;flex-direction:column;gap:5px}
 .fgp.full{grid-column:1/-1}
 .fgp label{font-size:13px;color:var(--text2);font-weight:500}
-input,select,textarea{font-family:inherit;font-size:16px;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:8px 10px;width:100%;transition:border-color .15s;outline:none}
+strong{color:inherit} input,select,textarea{font-family:inherit;font-size:16px;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:8px 10px;width:100%;transition:border-color .15s;outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--text)}
 select{cursor:pointer}
 textarea{min-height:80px;resize:vertical}
 .cdet{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-size:14px;gap:12px}
 .cdet span:first-child{color:var(--text2);white-space:nowrap}
 .cdet span:last-child{text-align:right}
-.pendbox{background:#fef3c7;border:1px solid #fde68a;border-radius:var(--radius);padding:1.5rem;text-align:center;margin-bottom:1rem}
-.pendtitle{font-size:17px;font-weight:600;color:#92400e;margin-bottom:6px}
-.pendsub{font-size:14px;color:#b45309}
-@media(prefers-color-scheme:dark){.pendbox{background:#292108;border-color:#78350f}.pendtitle{color:#fbbf24}.pendsub{color:#d97706}}
+.pendbox{background:#292108;border:1px solid #78350f;border-radius:var(--radius);padding:1.5rem;text-align:center;margin-bottom:1rem}
+.pendtitle{font-size:17px;font-weight:600;color:#fbbf24;margin-bottom:6px}
+.pendsub{font-size:14px;color:#d97706}
+
 .progress{display:flex;align-items:center;margin-bottom:1.25rem}
 .pstep{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3)}
 .pstep.on{color:var(--text2);font-weight:500}.pstep.done{color:var(--text3)}
@@ -82,8 +81,8 @@ textarea{min-height:80px;resize:vertical}
 .modal-overlay.on{display:flex}
 .modal{background:var(--bg);border-radius:var(--radius);padding:1.5rem;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
 .modal-title{font-size:16px;font-weight:600;margin-bottom:4px}
-.modal-badge{display:inline-block;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-bottom:12px}
-@media(prefers-color-scheme:dark){.modal-badge{background:#292108;color:#fbbf24}}
+.modal-badge{display:inline-block;background:#292108;color:#fbbf24;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-bottom:12px}
+
 .modal-body{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1.25rem}
 .modal-check{display:flex;align-items:flex-start;gap:10px;background:var(--bg2);border-radius:var(--rsm);padding:.85rem 1rem;margin-bottom:1.25rem;cursor:pointer}
 .modal-check input[type=checkbox]{width:16px;height:16px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:var(--text)}
@@ -232,7 +231,7 @@ textarea{min-height:80px;resize:vertical}
 
 <script>
 const STD_PRICING=[{label:'Up to 2,500 sq ft',note:'included'},{label:'2,500 – 3,500 sq ft',note:'+$150'},{label:'3,500 – 4,500 sq ft',note:'+$175'},{label:'4,500 sq ft and up',note:'+$200'}];
-const STD_TRAVEL=['<strong>First 50 km (round-trip) from Kitchener are included.</strong>','Beyond that, mileage is billed at $0.70/km (round trip).','For drives over 2 hours (one way), a long-distance travel fee applies ($100 + HST).'];
+const STD_TRAVEL=['<strong style="color:var(--text2)">First 50 km (round-trip) from Kitchener are included.</strong>','Beyond that, mileage is billed at $0.70/km (round trip).','For drives over 2 hours (one way), a long-distance travel fee applies ($100 + HST).'];
 const PACKAGES=[
   {id:'ultimate',name:'Ultimate Listing Package',price:'CA$1,100 + HST',duration:'3 hr 30 min',pop:false,short:'Our most complete package — everything we offer, bundled into one premium solution!',includes:['Interior &amp; Exterior Photo Shoot','Interior &amp; Exterior Video Shoot (Vertical or Horizontal)','Drone Photos &amp; Drone Video','Short Agent Intro Video','iGUIDE Virtual Tour','Floor Plan','All Add-Ons Included (AI transitions, high-end edits, video carousels, etc.)','Full Editing &amp; Post-Production (colour correction, colour grading, final exports)','<strong>First 50 km round-trip from Kitchener included</strong>'],pricing:STD_PRICING,travel:STD_TRAVEL,},
   {id:'allinone',name:'All-In-One',price:'CA$650 + HST',duration:'2 hr 30 min',pop:true,short:'Everything your listing needs — photos, video, drone, iGUIDE, floor plan, and editing, all in one session.',includes:['Interior &amp; Exterior Photo Shoot','Interior &amp; Exterior Video Shoot (Vertical or Horizontal)','Drone Footage (Video &amp; Photos)','Short Agent Intro','iGUIDE Virtual Tour','Floor Plan','Editing &amp; Post-Production (colour correction, colour grading, final exports)','<strong>First 50 km (round-trip) from Kitchener included</strong>'],pricing:STD_PRICING,travel:STD_TRAVEL,},
@@ -276,8 +275,8 @@ function renderPackages(){document.getElementById('pkg-grid').innerHTML=PACKAGES
 
 function showPkgDetail(id){
   const p=PACKAGES.find(x=>x.id===id);if(!p)return;st.selPkg=p;
-  let html='<div class="det-name">'+p.name+'</div><div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px"><span class="det-price">'+p.price+'</span><span class="det-dur">'+p.duration+'</span></div><p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:4px">'+p.short+'</p><div class="det-stitle">What\'s included</div><ul class="det-list">'+p.includes.map(i=>'<li>'+i+'</li>').join('')+'</ul>';
-  if(p.pricing){html+='<div class="det-stitle" style="margin-top:1.1rem">Property size pricing</div><div style="display:flex;flex-direction:column;gap:6px">'+p.pricing.map(r=>'<div style="display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-top:1px solid var(--border)"><span>'+r.label+'</span><span style="font-weight:500;color:'+(r.note==='included'?'#16a34a':'var(--text)')+'">'+r.note+'</span></div>').join('')+'</div>'}
+  let html='<div class="det-name">'+p.name+'</div><div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px"><span class="det-price">'+p.price+'</span><span class="det-dur">'+p.duration+'</span></div><div class="det-stitle">What\'s included</div><ul class="det-list">'+p.includes.map(i=>'<li>'+i+'</li>').join('')+'</ul>';
+  if(p.pricing){html+='<div class="det-stitle" style="margin-top:1.1rem">Property size pricing</div><div style="display:flex;flex-direction:column;gap:6px">'+p.pricing.map(r=>'<div style="display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-top:1px solid var(--border)"><span style="color:var(--text2)">'+r.label+'</span><span style="font-weight:500;color:'+(r.note==='included'?'#16a34a':'var(--text2)')+'">'+r.note+'</span></div>').join('')+'</div>'}
   if(p.travel){html+='<div class="det-stitle" style="margin-top:1.1rem">Travel</div><div style="display:flex;flex-direction:column;gap:6px">'+p.travel.map(t=>'<p style="font-size:13px;color:var(--text2);line-height:1.6">'+t+'</p>').join('')+'</div>'}
   if(p.note)html+='<div class="det-note" style="margin-top:1rem">'+p.note+'</div>';
   document.getElementById('pkg-detail').innerHTML=html;
