@@ -243,8 +243,8 @@ const PACKAGES=[
 const SLOTS=[{id:'a',lbl:'9:00 AM',block:'morning'},{id:'b',lbl:'10:00 AM',block:'morning'},{id:'c',lbl:'2:00 PM',block:'afternoon'},{id:'d',lbl:'3:00 PM',block:'afternoon'}];
 const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MNS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-let st={vy:new Date().getFullYear(),vm:new Date().getMonth(),sd:null,ss:null,selPkg:null,bk:[],wo:JSON.parse(localStorage.getItem('shoots_wo')||'[]'),blocked:JSON.parse(localStorage.getItem('shoots_blocked')||'{}'),notionBookings:[]};
-function sv(){localStorage.setItem('shoots_wo',JSON.stringify(st.wo));localStorage.setItem('shoots_blocked',JSON.stringify(st.blocked))}
+let st={vy:new Date().getFullYear(),vm:new Date().getMonth(),sd:null,ss:null,selPkg:null,bk:[],wo:JSON.parse(localStorage.getItem('shoots_wo')||'[]'),notionBookings:[]};
+function sv(){localStorage.setItem('shoots_wo',JSON.stringify(st.wo))}
 
 // Slot label → slot ID map for Notion data
 const SLOT_LABEL_MAP={'9:00 AM':'a','10:00 AM':'b','2:00 PM':'c','3:00 PM':'d'};
@@ -267,9 +267,7 @@ function bookedSlots(ds){
     .map(b=>SLOT_LABEL_MAP[b.slot])
     .filter(Boolean);
 }
-function adminBlocked(ds){return st.blocked[ds]||[]}
-function allUnavailable(ds){return[...new Set([...bookedSlots(ds),...adminBlocked(ds)])]}
-function blockedBlocks(ds){const u=allUnavailable(ds);const r={};SLOTS.forEach(s=>{if(u.includes(s.id))r[s.block]=true});return r}
+function blockedBlocks(ds){const u=bookedSlots(ds);const r={};SLOTS.forEach(s=>{if(u.includes(s.id))r[s.block]=true});return r}
 
 function renderPackages(){document.getElementById('pkg-grid').innerHTML=PACKAGES.map(p=>`<div class="pkg-card${p.pop?' pop':''}" onclick="showPkgDetail('${p.id}')">${p.pop?'<div class="pop-badge">MOST POPULAR</div>':''}<div class="pkg-name">${p.name}</div><div class="pkg-desc">${p.short}</div><div class="pkg-meta"><span class="pkg-price">${p.price}</span><span class="pkg-dur">· ${p.duration}</span></div></div>`).join('')}
 
@@ -349,7 +347,7 @@ function renderCal(){
     const past=td<cutoff;const isWE=(td.getDay()===0||td.getDay()===6)&&!st.wo.includes(ds);
     const ns=document.createElement('span');ns.textContent=d;el.appendChild(ns);
     const dot=document.createElement('div');dot.className='dot';el.appendChild(dot);
-    const allAdminClosed=adminBlocked(ds).length>=SLOTS.length;
+    const allAdminClosed=false;
     const allFull=blk['morning']&&blk['afternoon'];
     if(past||isWE){el.classList.add('dis')}
     else if(allAdminClosed){el.classList.add('admin-closed')}
