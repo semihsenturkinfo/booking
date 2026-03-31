@@ -46,11 +46,17 @@ export default async function handler(req, res) {
         }).filter(b => b.date && b.slot);
         return res.status(200).json({ bookings });
       } else {
-        const bookings = results.map(p => ({
-          date: p.properties['Preferred Shoot Date']?.date?.start || '',
-          slot: (p.properties['Time']?.multi_select?.[0]?.name) || (p.properties['Time']?.rich_text?.[0]?.text?.content) || '',
-          pageId: p.id,
-        })).filter(b => b.date && b.slot);
+        const bookings = [];
+        for (const p of results) {
+          const rawSlot = (p.properties['Time']?.rich_text?.[0]?.text?.content) || (p.properties['Time']?.multi_select?.[0]?.name) || '';
+          const date = p.properties['Preferred Shoot Date']?.date?.start || '';
+          if (!date) continue;
+          // Handle comma-separated slots (BLOCKED entries)
+          const slots = rawSlot.includes(', ') ? rawSlot.split(', ') : [rawSlot];
+          for (const slot of slots) {
+            if (slot) bookings.push({ date, slot, pageId: p.id });
+          }
+        }
         return res.status(200).json({ bookings });
       }
     }
@@ -83,27 +89,22 @@ export default async function handler(req, res) {
     }
 
     if (action === 'block') {
-      // Create a BLOCKED placeholder entry for date+slot
       const slots = Array.isArray(slot) ? slot : [slot];
-      const pageIds = [];
-      for (const s of slots) {
-        const response = await fetch('https://api.notion.com/v1/pages', {
-          method: 'POST', headers: NOTION_HEADERS,
-          body: JSON.stringify({
-            parent: { database_id: DATABASE_ID },
-            properties: {
-              'Full Name (1)': { title: [{ text: { content: 'BLOCKED' } }] },
-              'Property Address': { rich_text: [{ text: { content: 'BLOCKED' } }] },
-              'Preferred Shoot Date': { date: { start: String(date) } },
-              'Time': { rich_text: [{ text: { content: String(s) } }] },
-              'Agent': { rich_text: [{ text: { content: 'BLOCKED' } }] },
-            }
-          })
-        });
-        const result = await response.json();
-        if (result.id) pageIds.push(result.id);
-      }
-      return res.status(200).json({ pageIds });
+      const response = await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST', headers: NOTION_HEADERS,
+        body: JSON.stringify({
+          parent: { database_id: DATABASE_ID },
+          properties: {
+            'Full Name (1)': { title: [{ text: { content: 'BLOCKED' } }] },
+            'Property Address': { rich_text: [{ text: { content: 'BLOCKED' } }] },
+            'Preferred Shoot Date': { date: { start: String(date) } },
+            'Time': { rich_text: [{ text: { content: slots.join(', ') } }] },
+            'Agent': { rich_text: [{ text: { content: 'BLOCKED' } }] },
+          }
+        })
+      });
+      const result = await response.json();
+      return res.status(200).json({ pageIds: result.id ? [result.id] : [] });
     }
 
     if (action === 'unblock') {
