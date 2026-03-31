@@ -217,13 +217,13 @@ async function adToggleSlot(ds,slotId,close){
     const currentBlockedIds=(existing?.ids||[]);
     const allToBlock=[...currentBlockedIds,slotId];
     const allSlotLbls=allToBlock.map(id=>SLOTS.find(s=>s.id===id)?.lbl).filter(Boolean);
-    if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});}
+    if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});
     const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'block',date:ds,slot:allSlotLbls})});
     const d=await r.json();
     st.blocked[ds]={ids:allToBlock,pageId:d.pageIds?.[0]};
   } else {
     const existing=st.blocked[ds];
-    if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'unblock',pageId:existing.pageId}));}
+    if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});
     const remaining=(existing?.ids||[]).filter(x=>x!==slotId);
     if(remaining.length){
       const allSlotLbls=remaining.map(id=>SLOTS.find(s=>s.id===id)?.lbl).filter(Boolean);
