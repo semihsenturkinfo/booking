@@ -40,19 +40,22 @@ export default async function handler(req, res) {
       if (full) {
         const bookings = results.map(p => {
           const g = (k) => p.properties[k]?.rich_text?.[0]?.text?.content || p.properties[k]?.title?.[0]?.text?.content || p.properties[k]?.multi_select?.map(x=>x.name).join(', ') || p.properties[k]?.email || p.properties[k]?.phone_number || '';
-          return { pageId: p.id, date: p.properties['Preferred Shoot Date']?.date?.start||'', slot: g('Time'), name: g('Agent'), email: g('E-mail'), phone: g('Phone'), addr: g('Property Address'), pkg: g('What services do you need?'), sqft: g('Approximate square footage'), lockbox: g('Lockbox code or access instructions'), orientation: g('Video Orientation'), notes: g('Additional Notes') };
+          const addr = g('Property Address');
+          const isBlocked = addr === 'BLOCKED';
+          return { pageId: p.id, date: p.properties['Preferred Shoot Date']?.date?.start||'', slot: g('Time'), name: g('Agent'), email: g('E-mail'), phone: g('Phone'), addr, pkg: g('What services do you need?'), sqft: g('Approximate square footage'), lockbox: g('Lockbox code or access instructions'), orientation: g('Video Orientation'), notes: g('Additional Notes'), isBlocked };
         }).filter(b => b.date && b.slot);
         return res.status(200).json({ bookings });
       } else {
         const bookings = results.map(p => ({
           date: p.properties['Preferred Shoot Date']?.date?.start || '',
           slot: (p.properties['Time']?.multi_select?.[0]?.name) || (p.properties['Time']?.rich_text?.[0]?.text?.content) || '',
+          pageId: p.id,
         })).filter(b => b.date && b.slot);
         return res.status(200).json({ bookings });
       }
     }
 
-    const { action, booking } = req.body;
+    const { action, booking, date, slot, pageId } = req.body;
 
     if (action === 'create') {
       // Hardcode property types based on actual Notion database schema
@@ -68,8 +71,6 @@ export default async function handler(req, res) {
       if (booking.lockbox) properties['Lockbox code or access instructions'] = { rich_text: [{ text: { content: String(booking.lockbox) } }] };
       if (booking.orientation) properties['Video Orientation'] = { rich_text: [{ text: { content: String(booking.orientation) } }] };
       if (booking.notes) properties['Additional Notes'] = { rich_text: [{ text: { content: String(booking.notes) } }] };
-
-      // Title field (required by Notion)
       properties['Full Name (1)'] = { title: [{ text: { content: String(booking.name || 'New Booking') } }] };
 
       const response = await fetch('https://api.notion.com/v1/pages', {
@@ -79,6 +80,42 @@ export default async function handler(req, res) {
       const result = await response.json();
       if (!response.ok) { console.error('Notion create error:', JSON.stringify(result)); return res.status(400).json({ error: result }); }
       return res.status(200).json({ pageId: result.id });
+    }
+
+    if (action === 'block') {
+      // Create a BLOCKED placeholder entry for date+slot
+      const slots = Array.isArray(slot) ? slot : [slot];
+      const pageIds = [];
+      for (const s of slots) {
+        const response = await fetch('https://api.notion.com/v1/pages', {
+          method: 'POST', headers: NOTION_HEADERS,
+          body: JSON.stringify({
+            parent: { database_id: DATABASE_ID },
+            properties: {
+              'Full Name (1)': { title: [{ text: { content: 'BLOCKED' } }] },
+              'Property Address': { rich_text: [{ text: { content: 'BLOCKED' } }] },
+              'Preferred Shoot Date': { date: { start: String(date) } },
+              'Time': { rich_text: [{ text: { content: String(s) } }] },
+              'Agent': { rich_text: [{ text: { content: 'BLOCKED' } }] },
+            }
+          })
+        });
+        const result = await response.json();
+        if (result.id) pageIds.push(result.id);
+      }
+      return res.status(200).json({ pageIds });
+    }
+
+    if (action === 'unblock') {
+      // Archive (delete) a BLOCKED page
+      const ids = Array.isArray(pageId) ? pageId : [pageId];
+      for (const id of ids) {
+        await fetch(`https://api.notion.com/v1/pages/${id}`, {
+          method: 'PATCH', headers: NOTION_HEADERS,
+          body: JSON.stringify({ archived: true })
+        });
+      }
+      return res.status(200).json({ ok: true });
     }
 
     return res.status(400).json({ error: 'Unknown action' });
