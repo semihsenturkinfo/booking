@@ -138,7 +138,7 @@ textarea{min-height:80px;resize:vertical}
     </div>
     <div class="brow">
       <button class="btn btns" onclick="goS('0b')">&larr; Back</button>
-      <button class="btn btnp" id="bs1" disabled onclick="goS(2)">Continue &rarr;</button>
+      <button class="btn btnp" id="bs1" disabled onclick="showDeliveryModal()">Continue &rarr;</button>
     </div>
   </div>
   <div id="s2" style="display:none">
@@ -213,19 +213,16 @@ textarea{min-height:80px;resize:vertical}
 </div>
 
 <!-- Turnaround modal -->
-<div class="modal-overlay" id="turnaround-modal" onclick="handleOverlayClick(event)">
+<div class="modal-overlay" id="delivery-modal">
   <div class="modal">
     <div class="modal-badge">Spring Market Update</div>
-    <p class="modal-title">Please review before booking</p>
+    <p class="modal-title">Delivery times</p>
     <div class="modal-body">
-      Video turnaround is <strong>3 business days</strong> (Monday–Friday).<br><br>
-      Photos &amp; iGUIDE are delivered <strong>next day</strong>, no changes there.
+      <strong>Video:</strong> 3 business days (Mon–Fri).<br>
+      <strong>Photos &amp; iGUIDE:</strong> The next day.<br><br>
+      Please plan your listing timeline accordingly.
     </div>
-    <label class="modal-check" for="turnaround-cb">
-      <input type="checkbox" id="turnaround-cb" onchange="updateModalBtn()">
-      <span class="modal-check-label">I understand and agree to the current turnaround times.</span>
-    </label>
-    <button class="btn btnp" id="modal-submit-btn" style="width:100%;padding:12px;font-size:15px" disabled onclick="confirmSubmit()">Submit booking</button>
+    <button class="btn btnp" style="width:100%;padding:12px;font-size:15px" onclick="confirmDelivery()">I understand &rarr;</button>
   </div>
 </div>
 
@@ -430,19 +427,15 @@ function resetBooking(){
   goS(0);
 }
 function openTurnaroundModal(){
-  document.getElementById('turnaround-cb').checked=false;
-  document.getElementById('modal-submit-btn').disabled=true;
-  document.getElementById('turnaround-modal').classList.add('on');
-}
-function updateModalBtn(){
-  document.getElementById('modal-submit-btn').disabled=!document.getElementById('turnaround-cb').checked;
-}
-function handleOverlayClick(e){
-  if(e.target===document.getElementById('turnaround-modal'))document.getElementById('turnaround-modal').classList.remove('on');
-}
-function confirmSubmit(){
-  document.getElementById('turnaround-modal').classList.remove('on');
   submit();
+}
+function showDeliveryModal(){
+  document.getElementById('delivery-modal').classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function confirmDelivery(){
+  document.getElementById('delivery-modal').classList.remove('on');
+  goS(2);
 }
 
 renderPackages();goS(0);loadNotionBookings();
