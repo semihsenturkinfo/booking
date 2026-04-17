@@ -39,6 +39,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mnav button:hover{background:var(--bg2)}
 .mlbl{font-size:15px;font-weight:600}
 .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
 .ch{font-size:11px;color:var(--text3);text-align:center;padding:5px 0;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .cd{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;border-radius:var(--rsm);cursor:pointer;border:1px solid transparent;transition:all .1s;color:var(--text);gap:2px}
 .cd:hover:not(.dis):not(.emp):not(.full):not(.admin-closed){background:var(--border2);border-color:var(--border2);color:var(--text)}
@@ -128,6 +129,10 @@ textarea{min-height:80px;resize:vertical}
         <button onclick="chMo(1)">&#8594;</button>
       </div>
       <div class="cgrid" id="cgrid"></div>
+      <div id="cal-loading" style="display:none;text-align:center;padding:2rem 0;font-size:13px;color:var(--text2)">
+        <div style="display:inline-block;width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--text2);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px"></div>
+        <div>Checking availability...</div>
+      </div>
     </div>
     <div style="margin-bottom:1rem">
       <button id="next-avail-btn" class="btnp btn" style="width:100%;padding:11px;font-size:14px" onclick="goNextAvailable()">Go to next available</button>
@@ -247,6 +252,10 @@ function sv(){localStorage.setItem('shoots_wo',JSON.stringify(st.wo))}
 const SLOT_LABEL_MAP={'9:00 AM':'a','10:00 AM':'b','2:00 PM':'c','3:00 PM':'d'};
 
 async function loadNotionBookings(){
+  const loader=document.getElementById('cal-loading');
+  const grid=document.getElementById('cgrid');
+  if(loader){loader.style.display='block'}
+  if(grid){grid.style.visibility='hidden'}
   try{
     const res=await fetch('/api/notion',{headers:{'x-api-secret':'xK9mPqR3nT8vL2wY'}});
     const data=await res.json();
@@ -254,6 +263,9 @@ async function loadNotionBookings(){
   }catch(e){
     console.error('Failed to load bookings from Notion:',e);
     st.notionBookings=[];
+  }finally{
+    if(loader){loader.style.display='none'}
+    if(grid){grid.style.visibility='visible'}
   }
 }
 function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
