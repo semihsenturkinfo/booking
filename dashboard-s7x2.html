@@ -140,7 +140,7 @@ function adminBlocked(ds){const b=st.blocked[ds];return b?.ids||[]}
 
 async function loadBookings(){
   try{
-    const res=await fetch('/api/notion',{headers:{'x-api-secret':'xK9mPqR3nT8vL2wY'}});
+    const res=await fetch('/api/notion',{headers:{'x-api-secret':'mK7pXn3qR9vL5wZ2'}});
     const data=await res.json();
     const all=data.bookings||[];
     st.notionBookings=all;
@@ -154,7 +154,7 @@ async function loadBookings(){
 
 async function loadFullBookings(){
   try{
-    const res=await fetch('/api/notion?full=1',{headers:{'x-api-secret':'xK9mPqR3nT8vL2wY'}});
+    const res=await fetch('/api/notion?full=1',{headers:{'x-api-secret':'mK7pXn3qR9vL5wZ2'}});
     const data=await res.json();
     return data.bookings||[];
   }catch(e){console.error('Failed:',e);return[];}
@@ -208,17 +208,17 @@ async function adToggleSlot(ds,slotId,close){
     const currentBlockedIds=(existing?.ids||[]);
     const allToBlock=[...currentBlockedIds,slotId];
     const allSlotLbls=allToBlock.map(id=>SLOTS.find(s=>s.id===id)?.lbl).filter(Boolean);
-    if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});
-    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'block',date:ds,slot:allSlotLbls})});
+    if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});
+    const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'block',date:ds,slot:allSlotLbls})});
     const d=await r.json();
     st.blocked[ds]={ids:allToBlock,pageId:d.pageIds?.[0]};
   } else {
     const existing=st.blocked[ds];
-    if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});
+    if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});
     const remaining=(existing?.ids||[]).filter(x=>x!==slotId);
     if(remaining.length){
       const allSlotLbls=remaining.map(id=>SLOTS.find(s=>s.id===id)?.lbl).filter(Boolean);
-      const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'block',date:ds,slot:allSlotLbls})});
+      const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'block',date:ds,slot:allSlotLbls})});
       const d=await r.json();
       st.blocked[ds]={ids:remaining,pageId:d.pageIds?.[0]};
     } else {delete st.blocked[ds];}
@@ -232,8 +232,8 @@ async function adCloseDay(ds){
   const openSlots=SLOTS.filter(s=>!bookedIds.includes(s.id));
   const allToBlock=openSlots.map(s=>s.id);
   const allSlotLbls=openSlots.map(s=>s.lbl);
-  if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});}
-  const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'block',date:ds,slot:allSlotLbls})});
+  if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'unblock',pageId:existing.pageId}));}
+  const r=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'block',date:ds,slot:allSlotLbls})});
   const d=await r.json();
   st.blocked[ds]={ids:allToBlock,pageId:d.pageIds?.[0]};
   sv();renderAdCal();if(st.adSd&&fmt(st.adSd)===ds)adSelDate(st.adSd);
@@ -241,7 +241,7 @@ async function adCloseDay(ds){
 
 async function adOpenDay(ds){
   const existing=st.blocked[ds];
-  if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'unblock',pageId:existing.pageId})});}
+  if(existing?.pageId){await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'unblock',pageId:existing.pageId}));}
   delete st.blocked[ds];
   sv();renderAdCal();if(st.adSd&&fmt(st.adSd)===ds)adSelDate(st.adSd);
 }
@@ -252,12 +252,51 @@ const EMAILJS_KEY = 'q12N3BHMUohCjKnslhgh4';
 
 function setF(f,btn){st.filt=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderAd()}
 
+async function updSt(id, status){
+  const b = st.bk.find(b => b.id === id);
+  if (!b) return;
+  b.status = status;
+  sv();
+  renderAd();
 
+  if (status === 'confirmed') {
+    // Update Notion status
+    if (b.notionPageId) {
+      try {
+        await fetch('/api/notion', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},
+          body: JSON.stringify({action:'confirm', pageId: b.notionPageId})
+        });
+      } catch(e) { console.error('Notion confirm failed:', e); }
+    }
+
+    // Send confirmation email via EmailJS
+    try {
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+        client_name: b.name,
+        client_email: b.email,
+        package: b.pkg,
+        date: b.dateD,
+        time: b.slot,
+        address: b.addr,
+        sqft: b.sqft || '—',
+        orientation: b.orientation || '—',
+        lockbox: b.lockbox || '—',
+        notes: b.notes || '—',
+      });
+      alert('Confirmation email sent to ' + b.email);
+    } catch(e) {
+      console.error('EmailJS failed:', e);
+      alert('Booking confirmed but email failed: ' + e.text);
+    }
+  }
+}
 
 async function updSt(pageId, status){
   // Update Notion
   try{
-    await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:status==='confirmed'?'confirm':'cancel',pageId})});
+    await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:status==='confirmed'?'confirm':'cancel',pageId})});
   }catch(e){console.error('Notion update failed:',e)}
 
   if(status==='confirmed'){
@@ -292,7 +331,7 @@ async function renderAd(){
   const list=document.getElementById('blist');
   list.innerHTML='<div class="empty">Loading...</div>';
   try{
-    const res=await fetch('/api/notion?full=1',{headers:{'x-api-secret':'xK9mPqR3nT8vL2wY'}});
+    const res=await fetch('/api/notion?full=1',{headers:{'x-api-secret':'mK7pXn3qR9vL5wZ2'}});
     const data=await res.json();
     st.notionBookings=data.bookings||[];
   }catch(e){console.error('Load failed:',e)}
@@ -325,8 +364,25 @@ async function renderAd(){
   }).join('');
 }
 
+,body:JSON.stringify({password:pw})});
+    const data=await res.json();
+    if(data.ok){
+      document.getElementById('gate').style.display='none';
+      document.getElementById('admin-wrap').style.display='block';
+      sessionStorage.setItem('admin_auth','1');
+      loadBookings().then(()=>{renderAdCal();renderAd();});
+    } else {
+      document.getElementById('pw-err').style.display='block';
+      document.getElementById('pw-input').value='';
+    }
+  }catch(e){
+    document.getElementById('pw-err').style.display='block';
+  }
+}
+
+
+
 emailjs.init(EMAILJS_KEY);
-loadBookings().then(()=>{renderAdCal();renderAd();});
 </script>
 </body>
 </html>
