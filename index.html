@@ -245,8 +245,8 @@ const PACKAGES=[
 const SLOTS=[{id:'a',lbl:'9:00 AM',block:'morning'},{id:'b',lbl:'10:00 AM',block:'morning'},{id:'c',lbl:'2:00 PM',block:'afternoon'},{id:'d',lbl:'3:00 PM',block:'afternoon'}];
 const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MNS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-let st={vy:new Date().getFullYear(),vm:new Date().getMonth(),sd:null,ss:null,selPkg:null,bk:[],wo:JSON.parse(localStorage.getItem('shoots_wo')||'[]'),notionBookings:[]};
-function sv(){localStorage.setItem('shoots_wo',JSON.stringify(st.wo))}
+let st={vy:new Date().getFullYear(),vm:new Date().getMonth(),sd:null,ss:null,selPkg:null,bk:[],wo:[],notionBookings:[]};
+function sv(){}
 
 // Slot label → slot ID map for Notion data
 const SLOT_LABEL_MAP={'9:00 AM':'a','10:00 AM':'b','2:00 PM':'c','3:00 PM':'d'};
@@ -260,9 +260,11 @@ async function loadNotionBookings(){
     const res=await fetch('/api/notion',{headers:{'x-api-secret':'mK7pXn3qR9vL5wZ2'}});
     const data=await res.json();
     st.notionBookings=data.bookings||[];
+    st.wo=data.weekendOpen||[];
   }catch(e){
     console.error('Failed to load bookings from Notion:',e);
     st.notionBookings=[];
+    st.wo=[];
   }finally{
     if(loader){loader.style.display='none'}
     if(grid){grid.style.visibility='visible'}

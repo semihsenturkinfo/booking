@@ -122,10 +122,10 @@ let st = {
   adSd:null,
   notionBookings:[],
   blocked:{},
-  wo:JSON.parse(localStorage.getItem('admin_wo')||'[]')
+  wo:[]
 };
 
-function sv(){ localStorage.setItem('admin_wo', JSON.stringify(st.wo)); localStorage.setItem('admin_blocked', JSON.stringify(st.blocked)); }
+function sv(){  localStorage.setItem('admin_blocked', JSON.stringify(st.blocked)); }
 function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') }
 function fmtD(d){ const dn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']; return dn[d.getDay()]+', '+MNS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear() }
 function bookedSlots(ds){ return st.notionBookings.filter(b=>b.date===ds&&!b.isBlocked).map(b=>SLOT_LABEL_MAP[b.slot]).filter(Boolean) }
@@ -145,7 +145,7 @@ async function loadBookings(){
     const res = await fetch('/api/notion', {headers:{'x-api-secret':API_SECRET}});
     const data = await res.json();
     st.notionBookings = data.bookings||[];
-    // Rebuild blocked from Notion BLOCKED entries
+    st.wo = (data.weekendOpen||[]).map(date=>({date}));
     st.blocked = JSON.parse(localStorage.getItem('admin_blocked')||'{}');
   }catch(e){ console.error('Load failed:',e); st.notionBookings=[]; }
 }
@@ -247,17 +247,24 @@ async function adOpenDay(ds){
   sv(); renderAdCal(); adSelDate(new Date(ds+'T12:00:00'));
 }
 
-function addWO(){
+async function addWO(){
   const inp = document.getElementById('wo-input');
   const val = inp.value.trim();
   if(!val) return;
   const d = new Date(val+'T12:00:00');
   if(isNaN(d.getTime())){ alert('Invalid date'); return }
-  if(d.getDay()!==0&&d.getDay()!==6){ alert('That\'s not a weekend day.'); return }
-  if(!st.wo.includes(val)){ st.wo.push(val); sv(); renderAdCal(); renderAd() }
+  if(d.getDay()!==0&&d.getDay()!==6){ alert("That's not a weekend day."); return }
+  if(st.wo.find(x=>x.date===val)){ alert('Already open'); return }
+  const r = await apiPost({action:'weekend_open', date:val});
+  if(r.pageId){ st.wo.push({date:val, pageId:r.pageId}); renderAdCal(); renderAd() }
   inp.value='';
 }
-function removeWO(ds){ st.wo=st.wo.filter(x=>x!==ds); sv(); renderAdCal(); renderAd() }
+async function removeWO(ds){
+  const entry = st.wo.find(x=>x.date===ds);
+  if(entry?.pageId) await apiPost({action:'weekend_close', pageId:entry.pageId});
+  st.wo = st.wo.filter(x=>x.date!==ds);
+  renderAdCal(); renderAd();
+}
 
 function setF(f, btn){ st.filt=f; document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); renderAd() }
 
