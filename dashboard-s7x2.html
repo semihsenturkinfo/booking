@@ -116,6 +116,8 @@ const MN = ['January','February','March','April','May','June','July','August','S
 const MNS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 let st = {
+  woVy:new Date().getFullYear(),
+  woVm:new Date().getMonth(),
   filt:'all',
   adVy:new Date().getFullYear(),
   adVm:new Date().getMonth(),
@@ -145,7 +147,7 @@ async function loadBookings(){
     const res = await fetch('/api/notion', {headers:{'x-api-secret':API_SECRET}});
     const data = await res.json();
     st.notionBookings = data.bookings||[];
-    st.wo = (data.weekendOpen||[]).map(date=>({date}));
+    st.wo = (data.weekendOpen||[]).map(d=>({date:d}));
     st.blocked = JSON.parse(localStorage.getItem('admin_blocked')||'{}');
   }catch(e){ console.error('Load failed:',e); st.notionBookings=[]; }
 }
@@ -247,23 +249,17 @@ async function adOpenDay(ds){
   sv(); renderAdCal(); adSelDate(new Date(ds+'T12:00:00'));
 }
 
-async function addWO(){
-  const inp = document.getElementById('wo-input');
-  const val = inp.value.trim();
+async function addWO(val){
   if(!val) return;
-  const d = new Date(val+'T12:00:00');
-  if(isNaN(d.getTime())){ alert('Invalid date'); return }
-  if(d.getDay()!==0&&d.getDay()!==6){ alert("That's not a weekend day."); return }
-  if(st.wo.find(x=>x.date===val)){ alert('Already open'); return }
+  if(st.wo.find(x=>(x.date||x)===val)) return;
   const r = await apiPost({action:'weekend_open', date:val});
-  if(r.pageId){ st.wo.push({date:val, pageId:r.pageId}); renderAdCal(); renderAd() }
-  inp.value='';
+  if(r.pageId){ st.wo.push({date:val, pageId:r.pageId}); renderAdCal(); renderAd(); renderWoCal(); }
 }
 async function removeWO(ds){
   const entry = st.wo.find(x=>x.date===ds);
   if(entry?.pageId) await apiPost({action:'weekend_close', pageId:entry.pageId});
-  st.wo = st.wo.filter(x=>x.date!==ds);
-  renderAdCal(); renderAd();
+  st.wo = st.wo.filter(x=>(x.date||x)!==ds);
+  renderAdCal(); renderAd(); renderWoCal();
 }
 
 function setF(f, btn){ st.filt=f; document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); renderAd() }
@@ -300,8 +296,8 @@ async function renderAd(){
     '<div class="stc"><div class="stl">Cancelled</div><div class="stv" style="color:#f87171">'+canc.length+'</div></div>';
 
   const woHtml = st.wo.length
-    ? '<div style="display:flex;flex-wrap:wrap;gap:6px">'+st.wo.map(ds=>{
-        const d=new Date(ds+'T12:00:00');
+    ? '<div style="display:flex;flex-wrap:wrap;gap:6px">'+st.wo.map(w=>{
+        const ds=w.date||w; const d=new Date(ds+'T12:00:00');
         return '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px">'+fmtD(d)+'<button onclick="removeWO(\''+ds+'\')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px">&#x2715;</button></span>';
       }).join('')+'</div>'
     : '<p style="font-size:13px;color:var(--text3)">No weekend dates opened yet.</p>';
@@ -310,10 +306,14 @@ async function renderAd(){
     '<div class="card" style="margin-bottom:1rem">'+
     '<div style="font-size:15px;font-weight:600;margin-bottom:6px">Weekend overrides</div>'+
     '<p style="font-size:13px;color:var(--text2);margin-bottom:12px">Open specific weekend dates for booking.</p>'+
-    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">'+
-    '<input type="date" id="wo-input" style="width:180px" min="'+fmt(new Date())+'">'+
-    '<button class="btn btns" style="padding:7px 14px;font-size:13px" onclick="addWO()">+ Open date</button></div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+    '<button onclick="woChMo(-1)" style="background:none;border:1px solid var(--border2);color:var(--text);border-radius:var(--rsm);padding:4px 10px;cursor:pointer;font-size:13px">&#8592;</button>'+
+    '<span style="font-size:14px;font-weight:600" id="wo-mlbl"></span>'+
+    '<button onclick="woChMo(1)" style="background:none;border:1px solid var(--border2);color:var(--text);border-radius:var(--rsm);padding:4px 10px;cursor:pointer;font-size:13px">&#8594;</button>'+
+    '</div>'+
+    '<div class="cgrid" id="wo-cgrid" style="margin-bottom:12px"></div>'+
     woHtml+'</div>';
+  renderWoCal();
 
   const filt = st.filt==='all' ? all : all.filter(b=>b.status===st.filt);
   if(!filt.length){ list.innerHTML='<div class="empty">No bookings here.</div>'; return }
@@ -334,6 +334,47 @@ async function renderAd(){
       '</div></div>';
   }).join('');
 }
+
+function woChMo(d){ st.woVm+=d; if(st.woVm>11){st.woVm=0;st.woVy++} if(st.woVm<0){st.woVm=11;st.woVy--} renderWoCal() }
+
+function renderWoCal(){
+  const lbl = document.getElementById('wo-mlbl');
+  const g = document.getElementById('wo-cgrid');
+  if(!lbl||!g) return;
+  lbl.textContent = MN[st.woVm]+' '+st.woVy;
+  g.innerHTML = '';
+  ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d=>{ const h=document.createElement('div');h.className='ch';h.textContent=d;g.appendChild(h) });
+  const offset = (new Date(st.woVy,st.woVm,1).getDay()+6)%7;
+  const dim = new Date(st.woVy,st.woVm+1,0).getDate();
+  const tod = new Date(); tod.setHours(0,0,0,0);
+  for(let i=0;i<offset;i++){ const e=document.createElement('div');e.className='cd emp';g.appendChild(e) }
+  for(let i=1;i<=dim;i++){
+    const d = new Date(st.woVy,st.woVm,i);
+    const ds = fmt(d);
+    const dow = d.getDay();
+    const e = document.createElement('div');
+    e.textContent = i;
+    if(dow===0||dow===6){
+      // Weekend day
+      if(d<tod){ e.className='cd pas'; }
+      else {
+        const isOpen = st.wo.find(x=>(x.date||x)===ds);
+        e.className = 'cd'+(isOpen?' sel':'');
+        e.style.cursor='pointer';
+        e.onclick = async ()=>{
+          if(isOpen){ await removeWO(ds); }
+          else { await addWO(ds); }
+        };
+      }
+    } else {
+      e.className='cd';
+      e.style.opacity='0.2';
+      e.style.cursor='default';
+    }
+    g.appendChild(e);
+  }
+}
+
 
 const EMAILJS_SERVICE = 'service_f5n8tgj';
 const EMAILJS_TEMPLATE = 'template_1v0isbv';
