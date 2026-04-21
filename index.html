@@ -257,7 +257,7 @@ async function loadNotionBookings(){
   if(loader){loader.style.display='block'}
   if(grid){grid.style.visibility='hidden'}
   try{
-    const res=await fetch('/api/notion',{headers:{'x-api-secret':'xK9mPqR3nT8vL2wY'}});
+    const res=await fetch('/api/notion',{headers:{'x-api-secret':'mK7pXn3qR9vL5wZ2'}});
     const data=await res.json();
     st.notionBookings=data.bookings||[];
   }catch(e){
@@ -418,7 +418,7 @@ async function submit(){
   const sl=SLOTS.find(s=>s.id===st.ss);const orient=getOrientation();
   const b={id:Date.now(),date:fmt(st.sd),dateD:fmtD(st.sd),sid:st.ss,slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:g('ad'),sqft:g('sqft'),lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString()};
   try {
-    const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'xK9mPqR3nT8vL2wY'},body:JSON.stringify({action:'create',booking:b})});
+    const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'create',booking:b})});
     const data=await res.json();
     if(data.pageId)b.notionPageId=data.pageId;
   }catch(e){console.error('Notion save failed:',e)}
