@@ -228,14 +228,15 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
 <!-- Turnaround modal -->
 <div class="modal-overlay" id="delivery-modal">
   <div class="modal">
-    <p class="modal-title">Plan your listing timeline accordingly.</p>
-    <div class="modal-body">
-      <div style="margin-bottom:8px">
-        <div style="font-weight:600;color:var(--text)">Videos: 3 business days (Mon–Fri)</div>
-      </div>
-      <div style="font-weight:600;color:var(--text)">Photos &amp; iGUIDE: next day</div>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:20px;font-weight:400">Plan your listing timeline accordingly.</p>
+    <div style="background:var(--bg2);border-radius:var(--rsm);padding:16px;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Videos: 3 business days</div>
+      <div style="font-size:13px;color:var(--text2)">Mon–Fri</div>
     </div>
-    <button class="btn btnp" style="width:100%;padding:12px;font-size:15px" onclick="confirmDelivery()">I understand &rarr;</button>
+    <div style="padding:12px 0">
+      <div style="font-size:14px;color:var(--text2)">Photos &amp; iGUIDE: next day</div>
+    </div>
+    <button class="btn btnp" style="width:100%;padding:12px;font-size:15px;margin-top:8px" onclick="confirmDelivery()">I understand &rarr;</button>
   </div>
 </div>
 
