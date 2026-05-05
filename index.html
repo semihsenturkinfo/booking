@@ -115,8 +115,14 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
   <div id="s0b" style="display:none">
     <button class="btns btn" style="margin-bottom:1rem;padding:6px 14px;font-size:13px" onclick="goS(0)">&larr; All packages</button>
     <div class="card" id="pkg-detail"></div>
-    <div style="padding:1rem 0 0.5rem;margin-top:0.5rem">
-      <button class="btnp btn" style="width:100%;padding:14px;font-size:16px;border-radius:var(--rsm)" onclick="goS(1)">Book</button>
+    <div style="padding:0.75rem 0 0rem;margin-top:0.5rem">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text2);line-height:1.4;padding:12px 0">
+        <input type="checkbox" id="pricing-confirm" onchange="toggleBookBtn()" style="width:auto;cursor:pointer;margin:0;flex-shrink:0">
+        <span>I confirm I've read the property size and travel pricing</span>
+      </label>
+    </div>
+    <div style="padding:0 0 0.5rem">
+      <button class="btnp btn" id="book-btn" style="width:100%;padding:14px;font-size:16px;border-radius:var(--rsm);opacity:0.5;cursor:not-allowed" disabled onclick="goS(1)">Book</button>
     </div>
   </div>
   <div id="s1" style="display:none">
@@ -222,12 +228,13 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
 <!-- Turnaround modal -->
 <div class="modal-overlay" id="delivery-modal">
   <div class="modal">
-    <div class="modal-badge">Spring Market Update</div>
-    <p class="modal-title">Video delivery: 3 business days</p>
+    <p class="modal-title">Please plan your listing timeline accordingly.</p>
     <div class="modal-body">
-      Videos are delivered 3 business days after your shoot (Mon–Fri).<br><br>
-      <span style="font-size:13px">Photos &amp; iGUIDE: next day.</span><br>
-      <span style="font-size:13px">Please plan your listing timeline accordingly.</span>
+      <div style="margin-bottom:16px">
+        <div style="font-weight:600;color:var(--text);margin-bottom:4px">Video delivery: 3 business days</div>
+        <div style="font-size:13px">Videos are delivered 3 business days after your shoot (Mon–Fri).</div>
+      </div>
+      <div style="font-size:13px;color:var(--text2)">Photos &amp; iGUIDE: next day.</div>
     </div>
     <button class="btn btnp" style="width:100%;padding:12px;font-size:15px" onclick="confirmDelivery()">I understand &rarr;</button>
   </div>
@@ -296,7 +303,15 @@ function showPkgDetail(id){
   const hasVideo=['ultimate','allinone','video'].includes(p.id);
   document.getElementById('orientation-group').style.display=hasVideo?'block':'none';
   const orientEl=document.getElementById('orientation');if(orientEl)orientEl.selectedIndex=0;
+  const cb=document.getElementById('pricing-confirm');if(cb){cb.checked=false}
+  const btn=document.getElementById('book-btn');if(btn){btn.disabled=true;btn.style.opacity='0.5';btn.style.cursor='not-allowed'}
   goS('0b');
+}
+function toggleBookBtn(){
+  const cb=document.getElementById('pricing-confirm');
+  const btn=document.getElementById('book-btn');
+  if(cb.checked){btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer'}
+  else{btn.disabled=true;btn.style.opacity='0.5';btn.style.cursor='not-allowed'}
 }
 
 function goS(n){
