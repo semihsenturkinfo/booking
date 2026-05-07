@@ -118,7 +118,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
     <div style="padding:0.75rem 0 0rem;margin-top:0.5rem">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text2);line-height:1.4;padding:12px 0">
         <input type="checkbox" id="pricing-confirm" onchange="toggleBookBtn()" style="width:auto;cursor:pointer;margin:0;flex-shrink:0">
-        <span>I've read the <strong>Property Size Pricing</strong> and <strong>Travel</strong> pricing</span>
+        <span>I've read and accept the <strong>Property Size Pricing</strong> and <strong>Travel</strong> pricing</span>
       </label>
     </div>
     <div style="padding:0 0 0.5rem">
@@ -242,7 +242,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
 </div>
 
 <script>
-const STD_PRICING=[{label:'Up to 2,500 sq ft<br><span style="font-weight:600;font-size:13px;color:#666">(incl. finished basement)</span>',note:'included'},{label:'2,500 – 3,500 sq ft',note:'+$150'},{label:'3,500 – 4,500 sq ft',note:'+$175'},{label:'4,500 – 5,500 sq ft',note:'+$250'},{label:'5,500 sq ft and up',note:'+$300'}];
+const STD_PRICING=[{label:'Up to 2,500 sq ft<br><span style="font-weight:600;font-size:13px;color:#666">(incl. finished basement)</span>',note:'included'},{label:'2,500 – 3,500 sq ft',note:'+$150'},{label:'3,500 – 4,500 sq ft',note:'+$175'},{label:'4,500 – 5,500 sq ft',note:'+$300'},{label:'5,500 sq ft and up',note:'+$400'}];
 const STD_PRICING_NOTE='Square footage includes finished basement. If unsure, estimate total finished area.';
 const STD_TRAVEL=['First 50 km (round-trip) from Kitchener are included.','Beyond that, mileage is billed at $0.70/km (round trip).','For drives over 2 hours (one way), a long-distance travel fee applies ($100 + HST).'];
 const PACKAGES=[
