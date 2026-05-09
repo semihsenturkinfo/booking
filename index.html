@@ -160,7 +160,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
     <p class="sub">Tell us about the property.</p>
     <div class="card">
       <div class="fg">
-        <div class="fgp full"><label>Listing address</label><input type="text" id="ad" placeholder="123 Main St, Kitchener, ON" oninput="ck2a()"></div>
+        <div class="fgp full"><label>Full listing address</label><input type="text" id="ad" placeholder="e.g., 123 Main Street, Kitchener, ON" oninput="ck2a()"><div style="font-size:12px;color:var(--text3);margin-top:4px">Include street, city, and postal code</div></div>
         <div class="fgp">
           <label>Sq ft <span style="font-weight:400;color:var(--text2)">(including <strong>finished basement</strong>)</span></label>
           <select id="sqft" onchange="ck2a()">
@@ -376,13 +376,12 @@ function renderCal(){
     const bkd=bookedSlots(ds);const blk=blockedBlocks(ds);
     const past=td<cutoff;const isWE=(td.getDay()===0||td.getDay()===6)&&!st.wo.includes(ds);
     const ns=document.createElement('span');ns.textContent=d;el.appendChild(ns);
-    const dot=document.createElement('div');dot.className='dot';el.appendChild(dot);
     const allAdminClosed=false;
     const allFull=blk['morning']&&blk['afternoon'];
     if(past||isWE){el.classList.add('dis')}
     else if(allAdminClosed){el.classList.add('admin-closed')}
     else if(allFull){el.classList.add('full')}
-    else{if(bookedSlots(ds).length>0)el.classList.add('partial');el.onclick=()=>selDate(td);if(st.sd&&fmt(st.sd)===ds)el.classList.add('sel')}
+    else{el.onclick=()=>selDate(td);if(st.sd&&fmt(st.sd)===ds)el.classList.add('sel')}
     if(fmt(td)===fmt(tod))el.classList.add('today');
     g.appendChild(el);
   }
