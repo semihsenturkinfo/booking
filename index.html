@@ -288,7 +288,7 @@ function bookedSlots(ds){
     .map(b=>SLOT_LABEL_MAP[b.slot])
     .filter(Boolean);
 }
-function blockedBlocks(ds){const u=bookedSlots(ds);const r={};SLOTS.forEach(s=>{if(u.includes(s.id))r[s.block]=true});return r}
+function blockedBlocks(ds){const u=bookedSlots(ds);const r={};const allSlots=[{id:'a',block:'morning'},{id:'b',block:'morning'},{id:'c',block:'afternoon'},{id:'d',block:'afternoon'}];allSlots.forEach(s=>{if(u.includes(s.id))r[s.block]=true});return r}
 
 function renderPackages(){document.getElementById('pkg-grid').innerHTML=PACKAGES.map(p=>`<div class="pkg-card${p.pop?' pop':''}" onclick="showPkgDetail('${p.id}')">${p.pop?'<div class="pop-badge">MOST POPULAR</div>':''}<div class="pkg-name">${p.name}</div><div class="pkg-desc">${p.short}</div><div class="pkg-meta"><span class="pkg-price">${p.price}</span><span class="pkg-dur">· ${p.duration}</span></div></div>`).join('')}
 
@@ -397,7 +397,7 @@ function selDate(d){
   SLOTS.forEach(s=>{
     const el=document.createElement('div');el.className='slot';
     const isBlocked=!!blk[s.block];
-    el.innerHTML='<div>'+s.lbl+'</div>'+(isBlocked?'<div class="slot-sub">Unavailable</div>':'');
+    el.innerHTML=s.lbl+(isBlocked?'<div class="slot-sub">Unavailable</div>':'');
     if(isBlocked){el.classList.add('bkd')}
     else{el.onclick=()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');st.ss=s.id;document.getElementById('bs1').disabled=false;setTimeout(()=>{document.getElementById('bs1').scrollIntoView({behavior:'smooth',block:'center'})},50);}}
     sg.appendChild(el);
