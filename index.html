@@ -353,7 +353,7 @@ function goNextAvailable(){
     renderCal();
     selDate(td);
     document.getElementById('next-avail-btn').style.display='none';
-    setTimeout(()=>{const el=document.getElementById('slotcard');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})},50);
+    setTimeout(()=>{const el=document.getElementById('slotcard');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},100);
     return;
   }
   alert('No available dates found in the next 6 months.');
