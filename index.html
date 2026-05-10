@@ -230,14 +230,17 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
   <div class="modal">
     <p style="font-size:14px;color:var(--text2);margin-bottom:20px;font-weight:600">Delivery timeline</p>
     <div style="background:var(--bg2);border-radius:var(--rsm);padding:16px;margin-bottom:16px">
-      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:10px">Videos: 3 business days ⚠️</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Videos: 3 business days ⚠️</div>
+      <div style="font-size:14px;color:#22c55e;margin-bottom:10px;font-weight:500">Expected delivery: <span id="video-delivery-date"></span></div>
       <div style="font-size:13px;color:var(--text2)">(excluding weekends &amp; holidays)</div>
     </div>
-    <div style="padding:0;margin-bottom:16px">
+    <div style="padding:0;margin-bottom:24px">
       <div style="font-size:14px;color:var(--text2)">Photos &amp; iGUIDE: next day</div>
     </div>
-    <p style="font-size:13px;color:var(--text3);margin-bottom:20px">Please plan your listing timeline accordingly.</p>
-    <button class="btn btnp" style="width:100%;padding:12px;font-size:15px" onclick="confirmDelivery()">I understand &rarr;</button>
+    <div style="display:flex;gap:12px">
+      <button class="btn btns" style="flex:1;padding:12px;font-size:15px" onclick="document.getElementById('delivery-modal').classList.remove('on')">Choose different date</button>
+      <button class="btn btnp" style="flex:1;padding:12px;font-size:15px" onclick="confirmDelivery()">Accept &amp; continue &rarr;</button>
+    </div>
   </div>
 </div>
 
@@ -461,7 +464,27 @@ function resetBooking(){
 function openTurnaroundModal(){
   submit();
 }
+function calculateBusinessDays(startDate, daysToAdd){
+  let current = new Date(startDate);
+  let added = 0;
+  while(added < daysToAdd){
+    current.setDate(current.getDate() + 1);
+    const day = current.getDay();
+    if(day !== 0 && day !== 6) added++; // Skip weekends
+  }
+  return current;
+}
+function formatDeliveryDate(date){
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return days[date.getDay()] + ', ' + months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+}
 function showDeliveryModal(){
+  const shootDate = st.sd;
+  const videoDelivery = calculateBusinessDays(shootDate, 3);
+  
+  document.getElementById('video-delivery-date').textContent = formatDeliveryDate(videoDelivery);
+  
   document.getElementById('delivery-modal').classList.add('on');
   window.scrollTo({top:0,behavior:'smooth'});
 }
