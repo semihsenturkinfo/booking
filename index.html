@@ -404,6 +404,7 @@ function selDate(d){
     else{el.onclick=()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');st.ss=s.id;document.getElementById('bs1').disabled=false;setTimeout(()=>{document.getElementById('bs1').scrollIntoView({behavior:'smooth',block:'center'})},50);}}
     sg.appendChild(el);
   });
+  setTimeout(()=>{const el=document.getElementById('slotcard');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},100);
 }
 
 function ck2a(){
