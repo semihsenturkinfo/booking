@@ -160,7 +160,8 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
     <p class="sub">Tell us about the property.</p>
     <div class="card">
       <div class="fg">
-        <div class="fgp full"><label>Full listing address</label><input type="text" id="ad" placeholder="e.g., 123 Main Street, Kitchener, ON" oninput="ck2a()"><div style="font-size:12px;color:var(--text3);margin-top:4px">Include street, city, and postal code</div></div>
+        <div class="fgp"><label>Street address</label><input type="text" id="street" placeholder="e.g., 123 Main Street" oninput="ck2a()"></div>
+        <div class="fgp"><label>City</label><input type="text" id="city" placeholder="e.g., Kitchener, ON" oninput="ck2a()"></div>
         <div class="fgp">
           <label>Sq ft <span style="font-weight:400;color:var(--text2)">(including <strong>finished basement</strong>)</span></label>
           <select id="sqft" onchange="ck2a()">
@@ -408,7 +409,7 @@ function selDate(d){
 }
 
 function ck2a(){
-  const ok=['ad','sqft'].every(id=>document.getElementById(id).value.trim()!=='');
+  const ok=['street','city','sqft'].every(id=>document.getElementById(id).value.trim()!=='');
   const orientGrp=document.getElementById('orientation-group');
   const orientOk=orientGrp.style.display==='none'||document.getElementById('orientation').value!=='';
   document.getElementById('bs2a').disabled=!(ok&&orientOk);
@@ -418,12 +419,13 @@ function ck2b(){
   document.getElementById('bs2b').disabled=!ok;
 }
 function g(id){return document.getElementById(id).value.trim()}
+function getFullAddress(){return g('street')+', '+g('city')}
 function getOrientation(){const el=document.getElementById('orientation');return el&&el.value?el.value:null}
 function buildReview(){
   const sl=SLOTS.find(s=>s.id===st.ss);const orient=getOrientation();
   const rows=[
     ['Package',g('pk')],
-    ['Address',g('ad')],
+    ['Address',getFullAddress()],
     ['Approx. sq ft',g('sqft')],
     ['Lockbox / access',g('lockbox')||'—'],
   ];
@@ -440,7 +442,7 @@ function buildReview(){
 }
 async function submit(){
   const sl=SLOTS.find(s=>s.id===st.ss);const orient=getOrientation();
-  const b={id:Date.now(),date:fmt(st.sd),dateD:fmtD(st.sd),sid:st.ss,slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:g('ad'),sqft:g('sqft'),lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString()};
+  const b={id:Date.now(),date:fmt(st.sd),dateD:fmtD(st.sd),sid:st.ss,slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:getFullAddress(),sqft:g('sqft'),lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString()};
   try {
     const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'create',booking:b})});
     const data=await res.json();
