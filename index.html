@@ -163,12 +163,15 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
         <div class="fgp"><label>Street address</label><input type="text" id="street" placeholder="e.g., 123 Main Street" oninput="ck2a()"></div>
         <div class="fgp"><label>City</label><input type="text" id="city" placeholder="e.g., Kitchener, ON" oninput="ck2a()"></div>
         <div class="fgp">
-          <label>Sq ft <span style="font-weight:400;color:var(--text2)">(including <strong>finished basement</strong>)</span></label>
+          <label>Property size & pricing</label>
           <select id="sqft" onchange="ck2a()">
             <option value="">Select...</option>
-            <option>Under 2,500 sq ft</option>
-            <option>Above 2,500 sq ft</option>
-            <option>Not sure</option>
+            <option value="Up to 2,500 sq ft">Up to 2,500 sq ft (included)</option>
+            <option value="2,500 – 3,500 sq ft">2,500 – 3,500 sq ft (+$150)</option>
+            <option value="3,500 – 4,500 sq ft">3,500 – 4,500 sq ft (+$175)</option>
+            <option value="4,500 – 5,500 sq ft">4,500 – 5,500 sq ft (+$300)</option>
+            <option value="5,500 sq ft and up">5,500 sq ft and up (+$400)</option>
+            <option value="Not sure">Not sure</option>
           </select>
         </div>
         <div class="fgp" id="orientation-group" style="display:none">
@@ -219,7 +222,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
     <div class="pendbox">
       <div style="font-size:28px;margin-bottom:10px">&#9203;</div>
       <p class="pendtitle">Booking request sent!</p>
-      <p class="pendsub">Your request is pending confirmation. You'll receive an email once it's approved.</p>
+      <p class="pendsub">Your request is pending confirmation. We'll contact you shortly to confirm your booking.</p>
     </div>
     <div class="card" id="pendsum"></div>
     <div style="margin-top:1rem;text-align:center"><button class="btn btns" onclick="resetBooking()">Book another shoot</button></div>
@@ -248,12 +251,12 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
 <script>
 const STD_PRICING=[{label:'Up to 2,500 sq ft<br><span style="font-weight:600;font-size:13px;color:#666">(incl. finished basement)</span>',note:'included'},{label:'2,500 – 3,500 sq ft',note:'+$150'},{label:'3,500 – 4,500 sq ft',note:'+$175'},{label:'4,500 – 5,500 sq ft',note:'+$300'},{label:'5,500 sq ft and up',note:'+$400'}];
 const STD_PRICING_NOTE='Square footage includes finished basement. If unsure, estimate total finished area.';
-const STD_TRAVEL=['First 50 km (round-trip) from Doon South, Kitchener are included.','Beyond that, mileage is billed at $0.70/km (round trip).','For drives over 2 hours (one way), a long-distance travel fee applies ($100 + HST).'];
+const STD_TRAVEL=['First 50 km (round-trip) from Doon South, Kitchener are included.','Beyond that, mileage is billed at $0.70/km (round trip).'];
 const PACKAGES=[
   {id:'allinone',name:'All-In-One',price:'CA$650 + HST',duration:'3 hr',pop:true,short:'Everything your listing needs — photos, video, drone, iGUIDE, floor plan, and editing, all in one session.',includes:['Interior &amp; Exterior Photo Shoot','Interior &amp; Exterior Video Shoot (Vertical or Horizontal)','Drone Footage (Video &amp; Photos)','Short Agent Intro','iGUIDE Virtual Tour','Floor Plan','Editing &amp; Post-Production (colour correction, colour grading, final exports)'],pricing:STD_PRICING,travel:STD_TRAVEL,},
   {id:'photoiguide',name:'Photo + iGUIDE + Drone',price:'CA$400 + HST',duration:'1 hr 30 min',pop:false,short:'Photos, virtual tour, floor plan, and drone — everything a listing needs for a strong digital presence.',includes:['Interior &amp; Exterior Photo Shoot','Drone Footage (Photos)','iGUIDE Virtual Tour','Floor Plan','Editing &amp; Post-Production (colour correction, colour grading, final exports)'],pricing:STD_PRICING,travel:STD_TRAVEL,},
   {id:'video',name:'Listing Video',price:'CA$300 + HST',duration:'1 hr 30 min',pop:false,short:'Video-only package for listings that already have photos.',includes:['Interior &amp; Exterior Video Shoot (Vertical or Horizontal)','Drone Footage (Video)','Short Agent Intro','Editing &amp; Post-Production (colour correction, colour grading, final exports)','1 Video (vertical or horizontal)'],pricing:STD_PRICING,travel:STD_TRAVEL,},
-  {id:'photos',name:'Listing Photos',price:'CA$300 + HST',duration:'1 hr 30 min',pop:false,short:'Professional interior and exterior photography with drone.',includes:['Interior &amp; Exterior Photo Shoot','Drone Footage (Photos)','Editing &amp; Post-Production (colour correction, colour grading, final exports)'],pricing:STD_PRICING,travel:STD_TRAVEL,},
+  {id:'photos',name:'Listing Photos',price:'CA$300 + HST',duration:'1 hr 30 min',pop:false,short:'Professional interior and exterior photography with drone.',includes:['Interior &amp; Exterior Photo Shoot','Drone Footage (Photos)','Editing &amp; Post-Production (colour correction, colour grading, final exports)'],pricing:STD_PRICING,travel:STD_TRAVEL,note:'Photos delivered next business day.'},
   {id:'iguide',name:'iGUIDE Virtual Tour & Floor Plans',price:'CA$250 + HST',duration:'1 hr 30 min',pop:false,short:'Interactive virtual tour and accurate floor plans for your listing.',includes:['iGUIDE Virtual Tour','Floor Plan'],pricing:STD_PRICING,travel:STD_TRAVEL,},
 ];
 const SLOTS=[{id:'b',lbl:'10:00 AM',block:'morning'},{id:'c',lbl:'2:00 PM',block:'afternoon'}];
