@@ -164,7 +164,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
           <label>Property size & pricing</label>
           <select id="sqft" onchange="ck2a()">
             <option value="">Select...</option>
-            <option value="Up to 2,500 sq ft">Up to 2,500 sq ft (included)</option>
+            <option value="Up to 2,500 sq ft">✓ Up to 2,500 sq ft (included)</option>
             <option value="2,500 – 3,500 sq ft">2,500 – 3,500 sq ft (+$150)</option>
             <option value="3,500 – 4,500 sq ft">3,500 – 4,500 sq ft (+$175)</option>
             <option value="4,500 – 5,500 sq ft">4,500 – 5,500 sq ft (+$300)</option>
@@ -323,10 +323,10 @@ function showPkgDetail(id){
   const aiSelect=document.getElementById('ai-animations');
   if(p.id==='allinone'){
     aiGroup.style.display='block';
-    aiSelect.innerHTML='<option value="">Select...</option><option value="2 included">2 included (no charge)</option><option value="3 total">3 total (+$15)</option><option value="4 total">4 total (+$30)</option><option value="5 total">5 total (+$45)</option><option value="6 total">6 total (+$60)</option>';
+    aiSelect.innerHTML='<option value="">Select...</option><option value="2 included">✓ 2 included (no charge)</option><option value="3 total">3 total (+$15)</option><option value="4 total">4 total (+$30)</option><option value="5 total">5 total (+$45)</option><option value="6 total">6 total (+$60)</option>';
   }else if(p.id==='video'){
     aiGroup.style.display='block';
-    aiSelect.innerHTML='<option value="">Select...</option><option value="None">None</option><option value="2 animations">2 animations (+$50)</option><option value="3 animations">3 animations (+$65)</option><option value="4 animations">4 animations (+$80)</option><option value="5 animations">5 animations (+$95)</option><option value="6 animations">6 animations (+$110)</option>';
+    aiSelect.innerHTML='<option value="">Select...</option><option value="None">✓ None (no charge)</option><option value="2 animations">2 animations (+$50)</option><option value="3 animations">3 animations (+$65)</option><option value="4 animations">4 animations (+$80)</option><option value="5 animations">5 animations (+$95)</option><option value="6 animations">6 animations (+$110)</option>';
   }else{
     aiGroup.style.display='none';
     aiSelect.selectedIndex=0;
