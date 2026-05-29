@@ -76,6 +76,7 @@ export default async function handler(req, res) {
       if (booking.lockbox) properties['Lockbox code or access instructions'] = { rich_text: [{ text: { content: String(booking.lockbox) } }] };
       if (booking.orientation) properties['Video Orientation'] = { rich_text: [{ text: { content: String(booking.orientation) } }] };
       if (booking.notes) properties['Additional Notes'] = { rich_text: [{ text: { content: String(booking.notes) } }] };
+      if (booking.shootDateText) properties['shootDateText'] = { rich_text: [{ text: { content: String(booking.shootDateText) } }] };
       properties['Full Name (1)'] = { title: [{ text: { content: String(booking.name || 'New Booking') } }] };
       const response = await fetch('https://api.notion.com/v1/pages', {
         method: 'POST', headers: NOTION_HEADERS,
