@@ -77,7 +77,9 @@ export default async function handler(req, res) {
       if (booking.orientation) properties['Video Orientation'] = { rich_text: [{ text: { content: String(booking.orientation) } }] };
       if (booking.notes) properties['Additional Notes'] = { rich_text: [{ text: { content: String(booking.notes) } }] };
       if (booking.shootDateText) properties['shootDateText'] = { rich_text: [{ text: { content: String(booking.shootDateText) } }] };
-      properties['Full Name (1)'] = { title: [{ text: { content: String(booking.name || 'New Booking') } }] };
+      const isLarge = booking.sqft && !String(booking.sqft).startsWith('Up to') && String(booking.sqft) !== 'Not sure';
+      const titleName = (isLarge ? '⚠️ ' : '') + String(booking.name || 'New Booking');
+      properties['Full Name (1)'] = { title: [{ text: { content: titleName } }] };
       const response = await fetch('https://api.notion.com/v1/pages', {
         method: 'POST', headers: NOTION_HEADERS,
         body: JSON.stringify({ parent: { database_id: DATABASE_ID }, properties })
