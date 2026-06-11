@@ -86,7 +86,35 @@ export default async function handler(req, res) {
       });
       const result = await response.json();
       if (!response.ok) { console.error('Notion create error:', JSON.stringify(result)); return res.status(400).json({ error: result }); }
-      return res.status(200).json({ pageId: result.id });
+
+      // Large property (2500+ sqft) takes the whole day — auto-block the other slot
+      let autoBlockedPageId = null;
+      if (isLarge && booking.date && booking.slot) {
+        const ALL_SLOTS = ['10:00 AM', '2:00 PM'];
+        const otherSlots = ALL_SLOTS.filter(s => s !== String(booking.slot));
+        if (otherSlots.length) {
+          try {
+            const blockRes = await fetch('https://api.notion.com/v1/pages', {
+              method: 'POST', headers: NOTION_HEADERS,
+              body: JSON.stringify({
+                parent: { database_id: DATABASE_ID },
+                properties: {
+                  'Full Name (1)': { title: [{ text: { content: 'BLOCKED — large property' } }] },
+                  'Property Address': { rich_text: [{ text: { content: 'BLOCKED' } }] },
+                  'Preferred Shoot Date': { date: { start: String(booking.date) } },
+                  'Time': { rich_text: [{ text: { content: otherSlots.join(', ') } }] },
+                  'Agent': { rich_text: [{ text: { content: 'BLOCKED' } }] },
+                }
+              })
+            });
+            const blockResult = await blockRes.json();
+            if (blockRes.ok) autoBlockedPageId = blockResult.id;
+            else console.error('Auto-block error:', JSON.stringify(blockResult));
+          } catch (e) { console.error('Auto-block failed:', e.message); }
+        }
+      }
+
+      return res.status(200).json({ pageId: result.id, autoBlockedPageId });
     }
 
     if (action === 'block') {
