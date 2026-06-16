@@ -80,9 +80,19 @@ export default async function handler(req, res) {
       const isLarge = booking.sqft && !String(booking.sqft).startsWith('Up to') && String(booking.sqft) !== 'Not sure';
       const titleName = (isLarge ? '⚠️ ' : '') + String(booking.name || 'New Booking');
       properties['Full Name (1)'] = { title: [{ text: { content: titleName } }] };
+
+      // Package-based colored icon for quick visual scanning in Notion
+      const pkgStr = String(booking.pkg || '');
+      let pkgIcon = '⚪';
+      if (pkgStr.startsWith('All-In-One')) pkgIcon = '🟢';
+      else if (pkgStr.startsWith('Photo + iGUIDE')) pkgIcon = '🔵';
+      else if (pkgStr.startsWith('Listing Video')) pkgIcon = '🟣';
+      else if (pkgStr.startsWith('Listing Photos')) pkgIcon = '🟠';
+      else if (pkgStr.startsWith('iGUIDE Virtual Tour')) pkgIcon = '🟡';
+
       const response = await fetch('https://api.notion.com/v1/pages', {
         method: 'POST', headers: NOTION_HEADERS,
-        body: JSON.stringify({ parent: { database_id: DATABASE_ID }, properties })
+        body: JSON.stringify({ parent: { database_id: DATABASE_ID }, icon: { type: 'emoji', emoji: pkgIcon }, properties })
       });
       const result = await response.json();
       if (!response.ok) { console.error('Notion create error:', JSON.stringify(result)); return res.status(400).json({ error: result }); }
