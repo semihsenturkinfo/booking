@@ -78,7 +78,9 @@ export default async function handler(req, res) {
       if (booking.notes) properties['Additional Notes'] = { rich_text: [{ text: { content: String(booking.notes) } }] };
       if (booking.shootDateText) properties['shootDateText'] = { rich_text: [{ text: { content: String(booking.shootDateText) } }] };
       const isLarge = booking.sqft && !String(booking.sqft).startsWith('Up to') && String(booking.sqft) !== 'Not sure';
-      const titleName = (isLarge ? '⚠️ ' : '') + String(booking.name || 'New Booking');
+      const nameStr = String(booking.name || 'New Booking');
+      const lockIguide = /\b(ashley|greg)\b/i.test(nameStr);
+      const titleName = (isLarge ? '⚠️ ' : '') + nameStr + (lockIguide ? ' (LOCK THE IGUIDE)' : '');
       properties['Full Name (1)'] = { title: [{ text: { content: titleName } }] };
 
       // Package-based colored icon for quick visual scanning in Notion
