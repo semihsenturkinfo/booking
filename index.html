@@ -217,6 +217,13 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
 </div>
 
 <!-- Turnaround modal -->
+<div class="modal-overlay" id="welcome-modal">
+  <div class="modal">
+    <p class="modal-title">One quick thing</p>
+    <div class="modal-body" style="margin-bottom:1.5rem">Confirm your date with me first — then pick your package and fill in the details here.</div>
+    <button class="btn btnp" style="width:100%;padding:12px;font-size:15px" onclick="document.getElementById('welcome-modal').classList.remove('on')">Got it</button>
+  </div>
+</div>
 <div class="modal-overlay" id="delivery-modal">
   <div class="modal">
     <p style="font-size:14px;color:var(--text2);margin-bottom:20px;font-weight:600">Delivery timeline</p>
@@ -407,6 +414,7 @@ function confirmDelivery(){
 }
 
 renderPackages();goS(0);
+document.getElementById('welcome-modal').classList.add('on');
 (function(){const d=new Date();d.setDate(d.getDate()+1);const el=document.getElementById('shootdate');if(el)el.min=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();
 window.scrollTo(0,0);
 </script>
