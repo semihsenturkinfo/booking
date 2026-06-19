@@ -62,6 +62,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .fgp.full{grid-column:1/-1}
 .fgp label{font-size:13px;color:var(--text2);font-weight:500}
 strong{color:inherit} input,select,textarea{font-family:inherit;font-size:16px;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:8px 10px;width:100%;transition:border-color .15s;outline:none}
+input[type=date]{-webkit-appearance:none;appearance:none;text-align:left;min-height:37px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='3' y1='9' x2='21' y2='9'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:34px}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+input[type=date]::-webkit-calendar-picker-indicator{opacity:0;-webkit-appearance:none;display:none}
 input:focus,select:focus,textarea:focus{border-color:var(--text)}
 select{cursor:pointer}
 textarea{min-height:80px;resize:vertical}
@@ -120,55 +123,35 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
       </label>
     </div>
     <div style="padding:0 0 0.5rem">
-      <button class="btnp btn" id="book-btn" style="width:100%;padding:14px;font-size:16px;border-radius:var(--rsm);opacity:0.5;cursor:not-allowed" disabled onclick="goS(1)">Book</button>
-    </div>
-  </div>
-  <div id="s1" style="display:none">
-    <div id="pb1"></div>
-    <p class="ttl">Pick a date &amp; time</p>
-    <p class="sub" id="s1sub"></p>
-    <div class="card">
-      <div class="mnav">
-        <button onclick="chMo(-1)">&#8592;</button>
-        <span class="mlbl" id="mlbl"></span>
-        <button onclick="chMo(1)">&#8594;</button>
-      </div>
-      <div class="cgrid" id="cgrid"></div>
-      <div id="cal-loading" style="display:none;text-align:center;padding:2rem 0;font-size:13px;color:var(--text2)">
-        <div style="display:inline-block;width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--text2);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px"></div>
-        <div>Checking availability...</div>
-      </div>
-    </div>
-    <div style="margin-bottom:1rem">
-      <button id="next-avail-btn" class="btnp btn" style="width:100%;padding:11px;font-size:14px" onclick="goNextAvailable()">Go to next available</button>
-    </div>
-    <div class="card" id="slotcard" style="display:none">
-      <p style="font-size:14px;font-weight:600;margin-bottom:2px" id="slotdate"></p>
-      <p style="font-size:13px;color:var(--text2)">Select a time slot</p>
-      <div class="sgrid" id="sgrid"></div>
-    </div>
-    <div class="brow">
-      <button class="btn btns" onclick="goS('0b')">&larr; Back</button>
-      <button class="btn btnp" id="bs1" disabled onclick="showDeliveryModal()">Continue &rarr;</button>
+      <button class="btnp btn" id="book-btn" style="width:100%;padding:14px;font-size:16px;border-radius:var(--rsm);opacity:0.5;cursor:not-allowed" disabled onclick="goS(2)">Book</button>
     </div>
   </div>
   <div id="s2" style="display:none">
     <div id="pb2"></div>
-    <p class="ttl">About the listing</p>
-    <p class="sub">Tell us about the property.</p>
+    <p class="ttl">Date &amp; listing details</p>
+    <p class="sub">Pick your date and time, then tell us about the property.</p>
     <div class="card">
       <div class="fg">
+        <div class="fgp"><label>Shoot date</label><input type="date" id="shootdate" onchange="ck2a()" onclick="try{this.showPicker()}catch(e){}" style="cursor:pointer"></div>
+        <div class="fgp">
+          <label>Time</label>
+          <select id="shoottime" onchange="ck2a()">
+            <option value="">Select...</option>
+            <option value="b">10:00 AM</option>
+            <option value="c">2:00 PM</option>
+          </select>
+        </div>
         <div class="fgp"><label>Street address</label><input type="text" id="street" placeholder="e.g., 123 Main Street" oninput="ck2a()"></div>
         <div class="fgp"><label>City</label><input type="text" id="city" placeholder="e.g., Kitchener, ON" oninput="ck2a()"></div>
         <div class="fgp">
           <label>Property size & pricing</label>
           <select id="sqft" onchange="ck2a()">
             <option value="">Select...</option>
-            <option value="Up to 2,500 sq ft">✓ Up to 2,500 sq ft (included)</option>
-            <option value="2,500 – 3,500 sq ft">2,500 – 3,500 sq ft (+$150)</option>
-            <option value="3,500 – 4,500 sq ft">3,500 – 4,500 sq ft (+$175)</option>
-            <option value="4,500 – 5,500 sq ft">4,500 – 5,500 sq ft (+$300)</option>
-            <option value="5,500 sq ft and up">5,500 sq ft and up (+$500)</option>
+            <option value="Up to 2,500 sq ft">Up to 2,500 (included)</option>
+            <option value="2,500 – 3,500 sq ft">2,500–3,500 (+$150)</option>
+            <option value="3,500 – 4,500 sq ft">3,500–4,500 (+$175)</option>
+            <option value="4,500 – 5,500 sq ft">4,500–5,500 (+$300)</option>
+            <option value="5,500 sq ft and up">5,500+ (+$500)</option>
             <option value="Not sure">Not sure</option>
           </select>
         </div>
@@ -192,7 +175,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
       </div>
     </div>
     <div class="brow">
-      <button class="btn btns" onclick="goS(1)">&larr; Back</button>
+      <button class="btn btns" onclick="goS('0b')">&larr; Back</button>
       <button class="btn btnp" id="bs2a" disabled onclick="goS('2b')">Next &rarr;</button>
     </div>
   </div>
@@ -274,34 +257,8 @@ function sv(){}
 // Slot label → slot ID map for Notion data
 const SLOT_LABEL_MAP={'9:00 AM':'a','10:00 AM':'b','2:00 PM':'c','3:00 PM':'d'};
 
-async function loadNotionBookings(){
-  const loader=document.getElementById('cal-loading');
-  const grid=document.getElementById('cgrid');
-  if(loader){loader.style.display='block'}
-  if(grid){grid.style.visibility='hidden'}
-  try{
-    const res=await fetch('/api/notion',{headers:{'x-api-secret':'mK7pXn3qR9vL5wZ2'}});
-    const data=await res.json();
-    st.notionBookings=data.bookings||[];
-    st.wo=data.weekendOpen||[];
-  }catch(e){
-    console.error('Failed to load bookings from Notion:',e);
-    st.notionBookings=[];
-    st.wo=[];
-  }finally{
-    if(loader){loader.style.display='none'}
-    if(grid){grid.style.visibility='visible'}
-  }
-}
 function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function fmtD(d){const dn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];return dn[d.getDay()]+', '+MNS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
-function bookedSlots(ds){
-  return st.notionBookings
-    .filter(b=>b.date===ds)
-    .map(b=>SLOT_LABEL_MAP[b.slot])
-    .filter(Boolean);
-}
-function blockedBlocks(ds){const u=bookedSlots(ds);const r={};const allSlots=[{id:'a',block:'morning'},{id:'b',block:'morning'},{id:'c',block:'afternoon'},{id:'d',block:'afternoon'}];allSlots.forEach(s=>{if(u.includes(s.id))r[s.block]=true});return r}
 
 function renderPackages(){document.getElementById('pkg-grid').innerHTML=PACKAGES.map(p=>`<div class="pkg-card${p.pop?' pop':''}" onclick="showPkgDetail('${p.id}')">${p.pop?'<div class="pop-badge">MOST POPULAR</div>':''}<div class="pkg-name">${p.name}</div><div class="pkg-desc">${p.short}</div><div class="pkg-meta"><span class="pkg-price">${p.price}</span><span class="pkg-dur">· ${p.duration}</span></div></div>`).join('')}
 
@@ -323,10 +280,10 @@ function showPkgDetail(id){
   const aiSelect=document.getElementById('ai-animations');
   if(p.id==='allinone'){
     aiGroup.style.display='block';
-    aiSelect.innerHTML='<option value="">Select...</option><option value="2 included">✓ 2 included (no charge)</option><option value="3 total">3 total (+$15)</option><option value="4 total">4 total (+$30)</option><option value="5 total">5 total (+$45)</option><option value="6 total">6 total (+$60)</option>';
+    aiSelect.innerHTML='<option value="">Select...</option><option value="2 included">2 included (no charge)</option><option value="3 total">3 total (+$15)</option><option value="4 total">4 total (+$30)</option><option value="5 total">5 total (+$45)</option><option value="6 total">6 total (+$60)</option>';
   }else if(p.id==='video'){
     aiGroup.style.display='block';
-    aiSelect.innerHTML='<option value="">Select...</option><option value="None">✓ None (no charge)</option><option value="2 animations">2 animations (+$50)</option><option value="3 animations">3 animations (+$65)</option><option value="4 animations">4 animations (+$80)</option><option value="5 animations">5 animations (+$95)</option><option value="6 animations">6 animations (+$110)</option>';
+    aiSelect.innerHTML='<option value="">Select...</option><option value="None">None (no charge)</option><option value="2 animations">2 animations (+$50)</option><option value="3 animations">3 animations (+$65)</option><option value="4 animations">4 animations (+$80)</option><option value="5 animations">5 animations (+$95)</option><option value="6 animations">6 animations (+$110)</option>';
   }else{
     aiGroup.style.display='none';
     aiSelect.selectedIndex=0;
@@ -344,100 +301,30 @@ function toggleBookBtn(){
 }
 
 function goS(n){
-  ['s0','s0b','s1','s2','s2b','s3','s4'].forEach(id=>document.getElementById(id).style.display='none');
+  ['s0','s0b','s2','s2b','s3','s4'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
   document.getElementById('s'+n).style.display='block';
   window.scrollTo({top:0,behavior:'smooth'});
-  const steps=[{n:1,l:'Date & time'},{n:2,l:'Listing'},{n:'2b',l:'Your info'},{n:3,l:'Review'}];
-  const order=['s0','s0b','s1','s2','s2b','s3','s4'];
-  const numericOrder={1:1,'2':2,'2b':3,3:4};
+  const steps=[{n:2,l:'Date & listing'},{n:'2b',l:'Your info'},{n:3,l:'Review'}];
+  const numericOrder={'2':1,'2b':2,3:3};
   const cur=numericOrder[n]||0;
-  const pbarId=n===1?'pb1':n===2?'pb2':n==='2b'?'pb2b':null;
+  const pbarId=n===2?'pb2':n==='2b'?'pb2b':null;
   if(pbarId){
     document.getElementById(pbarId).innerHTML='<div class="progress">'+
       steps.map((s,i)=>{const sn=numericOrder[s.n]||0;return(i?'<div class="pline"></div>':'')+'<div class="pstep'+(cur===sn?' on':cur>sn?' done':'')+'"><div class="pdot"></div>'+s.l+'</div>'}).join('')+
     '</div>';
   }
-  if(n===1){
-    document.getElementById('s1sub').textContent=st.selPkg?st.selPkg.name+' — '+st.selPkg.price:'';
-    const nb=document.getElementById('next-avail-btn');if(nb)nb.style.display='';
-    loadNotionBookings().then(()=>renderCal());
-  }
   if(n===3)buildReview();
 }
 
-function goNextAvailable(){
-  const tod=new Date();tod.setHours(0,0,0,0);
-  const cutoff=new Date(tod);cutoff.setDate(cutoff.getDate()+1);
-  // Search up to 6 months ahead
-  for(let i=0;i<180;i++){
-    const td=new Date(cutoff);td.setDate(cutoff.getDate()+i);
-    const day=td.getDay();
-    const ds=fmt(td);
-    if(day===0||day===6){if(!st.wo.includes(ds))continue}
-    const blk=blockedBlocks(ds);
-    if(blk['morning']&&blk['afternoon'])continue;
-    // Found — jump to that month and select it
-    st.vm=td.getMonth();st.vy=td.getFullYear();
-    renderCal();
-    selDate(td);
-    document.getElementById('next-avail-btn').style.display='none';
-    setTimeout(()=>{const el=document.getElementById('slotcard');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},100);
-    return;
-  }
-  alert('No available dates found in the next 6 months.');
-}
-
-function chMo(d){st.vm+=d;if(st.vm>11){st.vm=0;st.vy++}if(st.vm<0){st.vm=11;st.vy--}renderCal()}
-
-function renderCal(){
-  document.getElementById('mlbl').textContent=MN[st.vm]+' '+st.vy;
-  const g=document.getElementById('cgrid');g.innerHTML='';
-  ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d=>{const h=document.createElement('div');h.className='ch';h.textContent=d;g.appendChild(h)});
-  const offset=(new Date(st.vy,st.vm,1).getDay()+6)%7;
-  const dim=new Date(st.vy,st.vm+1,0).getDate();
-  const tod=new Date();tod.setHours(0,0,0,0);
-  const cutoff=new Date(tod);cutoff.setDate(cutoff.getDate()+1);
-  for(let i=0;i<offset;i++){const e=document.createElement('div');e.className='cd emp';g.appendChild(e)}
-  for(let d=1;d<=dim;d++){
-    const el=document.createElement('div');el.className='cd';
-    const td=new Date(st.vy,st.vm,d);const ds=fmt(td);
-    const bkd=bookedSlots(ds);const blk=blockedBlocks(ds);
-    const past=td<cutoff;const isWE=(td.getDay()===0||td.getDay()===6)&&!st.wo.includes(ds);
-    const ns=document.createElement('span');ns.textContent=d;el.appendChild(ns);
-    const allAdminClosed=false;
-    const allFull=blk['morning']&&blk['afternoon'];
-    if(past||isWE){el.classList.add('dis')}
-    else if(allAdminClosed){el.classList.add('admin-closed')}
-    else if(allFull){el.classList.add('full')}
-    else{el.onclick=()=>selDate(td);if(st.sd&&fmt(st.sd)===ds)el.classList.add('sel')}
-    if(fmt(td)===fmt(tod))el.classList.add('today');
-    g.appendChild(el);
-  }
-}
-
-function selDate(d){
-  st.sd=d;st.ss=null;document.getElementById('bs1').disabled=true;renderCal();
-  const ds=fmt(d);const blk=blockedBlocks(ds);
-  document.getElementById('slotdate').textContent=fmtD(d);
-  document.getElementById('slotcard').style.display='block';
-  const sg=document.getElementById('sgrid');sg.innerHTML='';
-  SLOTS.forEach(s=>{
-    const el=document.createElement('div');el.className='slot';
-    const isBlocked=!!blk[s.block];
-    el.innerHTML=s.lbl+(isBlocked?'<div class="slot-sub">Unavailable</div>':'');
-    if(isBlocked){el.classList.add('bkd')}
-    else{el.onclick=()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');st.ss=s.id;document.getElementById('bs1').disabled=false;setTimeout(()=>{document.getElementById('bs1').scrollIntoView({behavior:'smooth',block:'center'})},50);}}
-    sg.appendChild(el);
-  });
-  setTimeout(()=>{const el=document.getElementById('slotcard');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},100);
-}
 
 function ck2a(){
-  const ok=['street','city','sqft'].every(id=>document.getElementById(id).value.trim()!=='');
+  const ok=['shootdate','shoottime','street','city','sqft'].every(id=>document.getElementById(id).value.trim()!=='');
   const orientGrp=document.getElementById('orientation-group');
   const orientOk=orientGrp.style.display==='none'||document.getElementById('orientation').value!=='';
   document.getElementById('bs2a').disabled=!(ok&&orientOk);
 }
+function getShootDate(){const v=document.getElementById('shootdate').value;if(!v)return null;const p=v.split('-').map(Number);return new Date(p[0],p[1]-1,p[2])}
+function getShootSlotId(){return document.getElementById('shoottime').value}
 function ck2b(){
   const ok=['fn','ph','em'].every(id=>document.getElementById(id).value.trim()!=='');
   document.getElementById('bs2b').disabled=!ok;
@@ -446,7 +333,7 @@ function g(id){return document.getElementById(id).value.trim()}
 function getFullAddress(){return g('street')+', '+g('city')}
 function getOrientation(){const el=document.getElementById('orientation');return el&&el.value?el.value:null}
 function buildReview(){
-  const sl=SLOTS.find(s=>s.id===st.ss);const orient=getOrientation();
+  const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();
   const rows=[
     ['Package',g('pk')],
     ['Address',getFullAddress()],
@@ -455,7 +342,7 @@ function buildReview(){
   ];
   if(orient)rows.push(['Video orientation',orient]);
   rows.push(
-    ['Date',fmtD(st.sd)],
+    ['Date',sd?fmtD(sd):''],
     ['Time',sl?sl.lbl:''],
     ['Name',g('fn')],
     ['Phone',g('ph')],
@@ -465,8 +352,8 @@ function buildReview(){
   document.getElementById('revcard').innerHTML=rows.map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('');
 }
 async function submit(){
-  const sl=SLOTS.find(s=>s.id===st.ss);const orient=getOrientation();const aiAnim=g('ai-animations');
-  const b={id:Date.now(),date:fmt(st.sd),dateD:fmtD(st.sd),sid:st.ss,slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:getFullAddress(),sqft:g('sqft'),lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,aiAnimations:aiAnim,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString(),shootDateText:fmt(st.sd)};
+  const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();const aiAnim=g('ai-animations');
+  const b={id:Date.now(),date:fmt(sd),dateD:fmtD(sd),sid:getShootSlotId(),slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:getFullAddress(),sqft:g('sqft'),lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,aiAnimations:aiAnim,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString(),shootDateText:fmt(sd)};
   try {
     const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'create',booking:b})});
     const data=await res.json();
@@ -478,15 +365,13 @@ async function submit(){
 }
 function resetBooking(){
   st.sd=null;st.ss=null;st.selPkg=null;
-  ['fn','ph','em','ad','lockbox','nt'].forEach(id=>document.getElementById(id).value='');
-  ['sqft','orientation','ai-animations'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0});
+  ['fn','ph','em','street','city','lockbox','nt','shootdate'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  ['sqft','orientation','ai-animations','shoottime'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0});
   document.getElementById('pk').value='';
   document.getElementById('orientation-group').style.display='none';
   document.getElementById('ai-animations-group').style.display='none';
-  document.getElementById('slotcard').style.display='none';
-  document.getElementById('bs1').disabled=true;
-  document.getElementById('bs2a').disabled=true;
-  document.getElementById('bs2b').disabled=true;
+  const b2a=document.getElementById('bs2a');if(b2a)b2a.disabled=true;
+  const b2b=document.getElementById('bs2b');if(b2b)b2b.disabled=true;
   goS(0);
 }
 function openTurnaroundModal(){
@@ -521,7 +406,9 @@ function confirmDelivery(){
   goS(2);
 }
 
-renderPackages();goS(0);loadNotionBookings();window.scrollTo(0,0);
+renderPackages();goS(0);
+(function(){const d=new Date();d.setDate(d.getDate()+1);const el=document.getElementById('shootdate');if(el)el.min=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();
+window.scrollTo(0,0);
 </script>
 </body>
 </html>
