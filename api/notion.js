@@ -69,7 +69,9 @@ export default async function handler(req, res) {
       if (booking.date) properties['Preferred Shoot Date'] = { date: { start: String(booking.date) } };
       if (booking.slot) properties['Time'] = { rich_text: [{ text: { content: String(booking.slot) } }] };
       if (booking.name) properties['Agent'] = { rich_text: [{ text: { content: String(booking.name) } }] };
-      if (booking.email) properties['E-mail'] = { rich_text: [{ text: { content: String(booking.email) } }] };
+      const teamCC = /\b(kaius|tyson|brandon)\b/i.test(String(booking.name || '')) ? 'sevde@teammosaic.ca' : '';
+      const emailVal = [String(booking.email || ''), teamCC].filter(Boolean).join(', ');
+      if (emailVal) properties['E-mail'] = { rich_text: [{ text: { content: emailVal } }] };
       if (booking.phone) properties['Phone'] = { rich_text: [{ text: { content: String(booking.phone) } }] };
       if (booking.pkg) properties['What services do you need?'] = { rich_text: [{ text: { content: String(booking.pkg) } }] };
       if (booking.sqft) properties['Approximate square footage'] = { rich_text: [{ text: { content: String(booking.sqft).replace(/,/g,'') } }] };
