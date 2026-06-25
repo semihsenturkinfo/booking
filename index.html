@@ -340,6 +340,29 @@ function ck2b(){
 function g(id){return document.getElementById(id).value.trim()}
 function getFullAddress(){return g('street')+', '+g('city')}
 function getOrientation(){const el=document.getElementById('orientation');return el&&el.value?el.value:null}
+function estimateTotal(){
+  const p=st.selPkg;if(!p)return null;
+  const bm=String(p.price).match(/\$(\d+)/);const base=bm?parseInt(bm[1]):0;
+  const SQFT_INDEX={'Up to 2,500 sq ft':0,'2,500 – 3,500 sq ft':1,'3,500 – 4,500 sq ft':2,'4,500 – 5,500 sq ft':3,'5,500 sq ft and up':4};
+  let size=0,sizeUnknown=false;const sq=g('sqft');
+  if(sq===''||sq==='Not sure'){sizeUnknown=true}
+  else if(p.pricing&&SQFT_INDEX[sq]!=null){const m=String(p.pricing[SQFT_INDEX[sq]].note).match(/\+\$(\d+)/);size=m?parseInt(m[1]):0}
+  let orient=0;const o=getOrientation();if(o){const om=o.match(/\+CA\$(\d+)/);if(om)orient=parseInt(om[1])}
+  let ai=0;const av=g('ai-animations');if(av){const nm=av.match(/(\d+)/);const n=nm?parseInt(nm[1]):0;if(p.id==='video'){if(/animation/.test(av)&&n>=2)ai=50+(n-2)*15}else if(p.id==='allinone'){ai=Math.max(0,n-2)*15}}
+  return {base,size,orient,ai,total:base+size+orient+ai,sizeUnknown};
+}
+function estimateHTML(){
+  const e=estimateTotal();if(!e)return '';
+  const rows=[['Base package','CA$'+e.base]];
+  rows.push(['Property size',e.sizeUnknown?'TBD':(e.size>0?'+$'+e.size:'Included')]);
+  if(e.orient>0)rows.push(['Video orientation (both)','+$'+e.orient]);
+  if(e.ai>0)rows.push(['AI animations','+$'+e.ai]);
+  const breakdown=rows.map(([k,v])=>'<div class="cdet"><span style="color:var(--text2)">'+k+'</span><span>'+v+'</span></div>').join('');
+  const amt=(e.sizeUnknown?'from ':'')+'CA$'+e.total+' + HST';
+  const totalRow='<div class="cdet" style="border-top:1px solid var(--border2);margin-top:6px;padding-top:12px"><span style="font-weight:600;color:var(--text)">Estimated total</span><span style="font-weight:700;color:var(--text)">'+amt+'</span></div>';
+  const note='<div style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:var(--rsm)"><span style="font-size:14px;line-height:1.4;flex-shrink:0;filter:grayscale(1);opacity:.65">&#9888;&#65039;</span><span style="font-size:12px;color:var(--text2);line-height:1.5;font-weight:500">This is an estimate &mdash; travel fee is not included yet'+(e.sizeUnknown?', and property size is still TBD':'')+'. Your final price is confirmed after the shoot.</span></div>';
+  return '<div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border2)"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text2);text-transform:uppercase;margin-bottom:10px">Price estimate</div>'+breakdown+totalRow+note+'</div>';
+}
 function buildReview(){
   const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();
   const rows=[
@@ -357,7 +380,7 @@ function buildReview(){
     ['Email',g('em')],
     ['Notes',g('nt')||'—']
   );
-  document.getElementById('revcard').innerHTML=rows.map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('');
+  document.getElementById('revcard').innerHTML=rows.map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('')+estimateHTML();
 }
 async function submit(){
   const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();const aiAnim=g('ai-animations');
@@ -368,7 +391,7 @@ async function submit(){
     if(data.pageId)b.notionPageId=data.pageId;
   }catch(e){console.error('Notion save failed:',e)}
   st.bk.push(b);sv();
-  document.getElementById('pendsum').innerHTML=[['Package',b.pkg],['Date',b.dateD],['Time',b.slot],['Name',b.name],['Address',b.addr]].map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('');
+  document.getElementById('pendsum').innerHTML=[['Package',b.pkg],['Date',b.dateD],['Time',b.slot],['Name',b.name],['Address',b.addr]].map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('')+estimateHTML();
   goS(4);
 }
 function resetBooking(){
