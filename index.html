@@ -397,7 +397,6 @@ function buildReview(){
   const dateLine=(sd?fmtD(sd):'')+(sl?' · '+sl.lbl:'');
 
   const extras=[];
-  if(orient)extras.push(['Video',orient]);
   if(g('lockbox'))extras.push(['Access',g('lockbox')]);
   if(g('nt'))extras.push(['Notes',g('nt')]);
   const extrasHTML=extras.length?'<div class="rev-extras">'+extras.map(([k,v])=>'<div class="rev-x"><span>'+k+'</span><span>'+esc(v)+'</span></div>').join('')+'</div>':'';
@@ -407,6 +406,7 @@ function buildReview(){
     '<div class="rev-row"><span class="rl">When</span><span class="rv">'+esc(dateLine)+'</span></div>'+
     '<div class="rev-row"><span class="rl">Where</span><span class="rv">'+esc(getFullAddress())+'</span></div>'+
     '<div class="rev-row"><span class="rl">Size</span><span class="rv">'+esc(g('sqft'))+'</span></div>'+
+    (orient?'<div class="rev-row"><span class="rl">Video</span><span class="rv">'+esc(orient)+'</span></div>':'')+
     '<div class="rev-div"></div>'+
     '<div class="rev-name">'+esc(g('fn'))+'</div>'+
     '<div class="rev-meta">'+esc(g('ph'))+' · '+esc(g('em'))+'</div>'+
