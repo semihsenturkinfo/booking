@@ -218,6 +218,27 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    if (action === 'loyalty_check') {
+      // Pre-submit count of prior non-archived All-In-One bookings for this customer
+      const email = String(req.body.email || '').trim().toLowerCase();
+      const name = String(req.body.name || '').trim();
+      let priorCount = 0;
+      try {
+        const conds = [{ property: 'What services do you need?', rich_text: { starts_with: 'All-In-One' } }];
+        if (email) conds.push({ property: 'E-mail', rich_text: { contains: email } });
+        else if (name) conds.push({ property: 'Agent', rich_text: { equals: name } });
+        else return res.status(200).json({ priorCount: 0 });
+        const r = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
+          method: 'POST', headers: NOTION_HEADERS,
+          body: JSON.stringify({ filter: { and: conds }, page_size: 100 })
+        });
+        const d = await r.json();
+        if (r.ok) priorCount = (d.results || []).length;
+        else console.error('loyalty_check error:', JSON.stringify(d));
+      } catch (e) { console.error('loyalty_check failed:', e.message); }
+      return res.status(200).json({ priorCount });
+    }
+
     return res.status(400).json({ error: 'Unknown action' });
   } catch (err) {
     console.error('Handler error:', err.message);
