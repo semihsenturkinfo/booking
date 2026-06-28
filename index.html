@@ -433,7 +433,9 @@ async function loadReviewLoyalty(){
 }
 async function submit(){
   const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();const aiAnim=g('ai-animations');
-  const b={id:Date.now(),date:fmt(sd),dateD:fmtD(sd),sid:getShootSlotId(),slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:getFullAddress(),sqft:g('sqft'),lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,aiAnimations:aiAnim,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString(),shootDateText:fmt(sd)};
+  const est=estimateTotal();let sqftDisplay=g('sqft');
+  if(est&&sqftDisplay&&sqftDisplay!=='Not sure')sqftDisplay+=est.size>0?' (+CA$'+est.size+')':' (included)';
+  const b={id:Date.now(),date:fmt(sd),dateD:fmtD(sd),sid:getShootSlotId(),slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:getFullAddress(),sqft:sqftDisplay,lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,aiAnimations:aiAnim,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString(),shootDateText:fmt(sd)};
   try {
     const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'create',booking:b})});
     const data=await res.json();
