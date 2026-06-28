@@ -123,6 +123,7 @@ export default async function handler(req, res) {
       else if (pkgStr.startsWith('Listing Video')) pkgIcon = '🟣';
       else if (pkgStr.startsWith('Listing Photos')) pkgIcon = '🟠';
       else if (pkgStr.startsWith('iGUIDE Virtual Tour')) pkgIcon = '🟡';
+      if (rewardEarned) pkgIcon = '🎁'; // reward booking — make it pop in Notion list view
 
       const response = await fetch('https://api.notion.com/v1/pages', {
         method: 'POST', headers: NOTION_HEADERS,
