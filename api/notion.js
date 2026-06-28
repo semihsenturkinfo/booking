@@ -82,11 +82,41 @@ export default async function handler(req, res) {
       const isLarge = booking.sqft && !String(booking.sqft).startsWith('Up to') && String(booking.sqft) !== 'Not sure';
       const nameStr = String(booking.name || 'New Booking');
       const lockIguide = /\b(ashley|greg)\b/i.test(nameStr);
-      const titleName = (isLarge ? '⚠️ ' : '') + nameStr + (lockIguide ? ' (LOCK THE IGUIDE)' : '');
+      const pkgStr = String(booking.pkg || '');
+
+      // --- Loyalty stars: 1 star per All-In-One purchase, free shoot at 5 ---
+      // Source of truth = the bookings themselves. Count prior non-archived
+      // All-In-One bookings for this customer (by email), then add this one.
+      let loyalty = null;
+      if (pkgStr.startsWith('All-In-One')) {
+        const custEmail = String(booking.email || '').trim().toLowerCase();
+        let priorCount = 0;
+        try {
+          const conds = [{ property: 'What services do you need?', rich_text: { starts_with: 'All-In-One' } }];
+          if (custEmail) conds.push({ property: 'E-mail', rich_text: { contains: custEmail } });
+          else conds.push({ property: 'Agent', rich_text: { equals: nameStr } });
+          const countRes = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
+            method: 'POST', headers: NOTION_HEADERS,
+            body: JSON.stringify({ filter: { and: conds }, page_size: 100 })
+          });
+          const countData = await countRes.json();
+          if (countRes.ok) priorCount = (countData.results || []).length;
+          else console.error('Loyalty count error:', JSON.stringify(countData));
+        } catch (e) { console.error('Loyalty count failed:', e.message); }
+
+        const total = priorCount + 1;                 // include this booking
+        const pos = total % 5 === 0 ? 5 : total % 5;   // 1..5 within current card
+        const rewardEarned = total % 5 === 0;          // hit a multiple of 5
+        const stars = '⭐'.repeat(pos) + '⚪'.repeat(5 - pos);
+        loyalty = { pos, total, rewardEarned };
+        properties['Loyalty'] = { rich_text: [{ text: { content: `${stars} (${pos}/5)${rewardEarned ? ' 🎁 FREE SHOOT EARNED' : ''}` } }] };
+      }
+
+      const rewardEarned = loyalty?.rewardEarned || false;
+      const titleName = (rewardEarned ? '🎁 ' : '') + (isLarge ? '⚠️ ' : '') + nameStr + (lockIguide ? ' (LOCK THE IGUIDE)' : '');
       properties['Full Name (1)'] = { title: [{ text: { content: titleName } }] };
 
       // Package-based colored icon for quick visual scanning in Notion
-      const pkgStr = String(booking.pkg || '');
       let pkgIcon = '⚪';
       if (pkgStr.startsWith('All-In-One')) pkgIcon = '🟢';
       else if (pkgStr.startsWith('Photo + iGUIDE')) pkgIcon = '🔵';
@@ -128,7 +158,7 @@ export default async function handler(req, res) {
         }
       }
 
-      return res.status(200).json({ pageId: result.id, autoBlockedPageId });
+      return res.status(200).json({ pageId: result.id, autoBlockedPageId, loyalty });
     }
 
     if (action === 'block') {
