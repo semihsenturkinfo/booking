@@ -184,11 +184,12 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
     <div id="pb2b"></div>
     <p class="ttl">Your details</p>
     <p class="sub">How should we reach you?</p>
+    <div id="rememberbox"></div>
     <div class="card">
       <div class="fg">
-        <div class="fgp full"><label>Full name</label><input type="text" id="fn" placeholder="Jane Smith" oninput="ck2b()"></div>
-        <div class="fgp"><label>Phone</label><input type="tel" id="ph" placeholder="(519) 555-0100" oninput="ck2b()"></div>
-        <div class="fgp"><label>Email</label><input type="email" id="em" placeholder="jane@realty.com" oninput="ck2b()"></div>
+        <div class="fgp full"><label>Full name</label><input type="text" id="fn" autocomplete="name" placeholder="Jane Smith" oninput="ck2b()"></div>
+        <div class="fgp"><label>Phone</label><input type="tel" id="ph" autocomplete="tel" placeholder="(519) 555-0100" oninput="ck2b()"></div>
+        <div class="fgp"><label>Email</label><input type="email" id="em" autocomplete="email" placeholder="jane@realty.com" oninput="ck2b()"></div>
         <div class="fgp full"><label>Notes (optional)</label><textarea id="nt" placeholder="Parking info, special requests..."></textarea></div>
       </div>
     </div>
@@ -212,6 +213,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
       <p class="pendtitle">Booking request sent!</p>
       <p class="pendsub">Your request is pending confirmation. We'll contact you shortly to confirm your booking.</p>
     </div>
+    <div id="loyaltybox"></div>
     <div class="card" id="pendsum"></div>
     <div style="margin-top:1rem;text-align:center"><button class="btn btns" onclick="resetBooking()">Book another shoot</button></div>
   </div>
@@ -389,12 +391,48 @@ async function submit(){
     const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'create',booking:b})});
     const data=await res.json();
     if(data.pageId)b.notionPageId=data.pageId;
-  }catch(e){console.error('Notion save failed:',e)}
+    renderLoyalty(data.loyalty);
+  }catch(e){console.error('Notion save failed:',e);renderLoyalty(null)}
   st.bk.push(b);sv();
+  rememberDetails(b);
   document.getElementById('pendsum').innerHTML=[['Package',b.pkg],['Date',b.dateD],['Time',b.slot],['Name',b.name],['Address',b.addr]].map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('')+estimateHTML();
   goS(4);
 }
+// --- Remember details on THIS device only (localStorage, never leaves browser) ---
+const SS_REMEMBER_KEY='ss_contact_v1';
+function rememberDetails(b){
+  try{localStorage.setItem(SS_REMEMBER_KEY,JSON.stringify({name:b.name||'',phone:b.phone||'',email:b.email||''}))}catch(e){}
+}
+function loadRemembered(){
+  let r=null;
+  try{const raw=localStorage.getItem(SS_REMEMBER_KEY);if(raw)r=JSON.parse(raw)}catch(e){}
+  const box=document.getElementById('rememberbox');if(!box)return;
+  if(!r||!(r.name||r.phone||r.email)){box.innerHTML='';return;}
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v};
+  set('fn',r.name);set('ph',r.phone);set('em',r.email);
+  if(typeof ck2b==='function')ck2b();
+  const first=(r.name||'').trim().split(' ')[0]||'there';
+  box.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;padding:12px 14px;background:rgba(126,140,84,0.10);border:1px solid var(--accent,#7E8C54);border-radius:var(--rsm,10px)"><span style="font-size:13px;color:var(--text,#eee)">Welcome back, <b>'+first.replace(/[<>&]/g,'')+'</b> &mdash; we filled in your details.</span><button onclick="clearRemembered()" style="flex-shrink:0;background:none;border:none;color:var(--text2,#999);font-size:12px;text-decoration:underline;cursor:pointer;padding:2px 4px">Not you? Clear</button></div>';
+}
+function clearRemembered(){
+  try{localStorage.removeItem(SS_REMEMBER_KEY)}catch(e){}
+  ['fn','ph','em'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  const box=document.getElementById('rememberbox');if(box)box.innerHTML='';
+  if(typeof ck2b==='function')ck2b();
+}
+function renderLoyalty(l){
+  const box=document.getElementById('loyaltybox');if(!box)return;
+  if(!l){box.innerHTML='';return;}
+  const stars='&#11088;'.repeat(l.pos)+'&#9898;'.repeat(5-l.pos);
+  if(l.rewardEarned){
+    box.innerHTML='<div style="margin:0 0 1rem;padding:18px 16px;text-align:center;background:linear-gradient(135deg,rgba(126,140,84,0.18),rgba(126,140,84,0.06));border:1px solid var(--accent,#7E8C54);border-radius:var(--rsm,10px)"><div style="font-size:22px;margin-bottom:6px">&#127881;</div><div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">Congrats &mdash; you earned a FREE 1-hour content shoot!</div><div style="font-size:18px;letter-spacing:3px;margin:8px 0">'+stars+'</div><div style="font-size:12px;color:var(--text2,#999);line-height:1.5">That&rsquo;s 5 All-In-One shoots. I&rsquo;ll reach out to schedule your free session. Your card resets after this &mdash; thank you for the repeat business!</div></div>';
+  }else{
+    const left=5-l.pos;
+    box.innerHTML='<div style="margin:0 0 1rem;padding:16px;text-align:center;background:rgba(255,255,255,0.03);border:1px solid var(--border2,#2a2a2a);border-radius:var(--rsm,10px)"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text2,#999);text-transform:uppercase;margin-bottom:8px">Loyalty rewards</div><div style="font-size:20px;letter-spacing:3px;margin-bottom:8px">'+stars+'</div><div style="font-size:13px;color:var(--text2,#bbb);line-height:1.5">You&rsquo;re at <b style="color:#fff">'+l.pos+'/5</b> All-In-One shoots. '+left+' more and your next 1-hour content shoot is on me &#127881;</div></div>';
+  }
+}
 function resetBooking(){
+  const lb=document.getElementById('loyaltybox');if(lb)lb.innerHTML='';
   st.sd=null;st.ss=null;st.selPkg=null;
   ['fn','ph','em','street','city','lockbox','nt','shootdate'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   ['sqft','orientation','ai-animations','shoottime'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0});
@@ -404,6 +442,7 @@ function resetBooking(){
   const b2a=document.getElementById('bs2a');if(b2a)b2a.disabled=true;
   const b2b=document.getElementById('bs2b');if(b2b)b2b.disabled=true;
   goS(0);
+  loadRemembered();
 }
 function openTurnaroundModal(){
   submit();
@@ -437,7 +476,7 @@ function confirmDelivery(){
   goS(2);
 }
 
-renderPackages();goS(0);
+renderPackages();goS(0);loadRemembered();
 document.getElementById('welcome-modal').classList.add('on');
 (function(){const d=new Date();d.setDate(d.getDate()+1);const el=document.getElementById('shootdate');if(el)el.min=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();
 window.scrollTo(0,0);
