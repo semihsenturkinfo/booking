@@ -72,7 +72,10 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
 .cdet{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-size:14px;gap:12px}
 .cdet span:first-child{color:var(--text2);white-space:nowrap}
 .cdet span:last-child{text-align:right}
-.rev-pkg{font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px}
+.rev-pkg{font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px}
+.rev-row{display:flex;gap:12px;font-size:14px;line-height:1.55;padding:4px 0}
+.rev-row .rl{flex:0 0 52px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);padding-top:3px}
+.rev-row .rv{color:var(--text);flex:1}
 .rev-meta{font-size:14px;color:var(--text2);line-height:1.65}
 .rev-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px}
 .rev-div{height:1px;background:var(--border);margin:13px 0}
@@ -401,9 +404,9 @@ function buildReview(){
 
   const html=
     '<div class="rev-pkg">'+esc(g('pk'))+'</div>'+
-    '<div class="rev-meta">'+esc(dateLine)+'</div>'+
-    '<div class="rev-meta">'+esc(getFullAddress())+'</div>'+
-    '<div class="rev-meta">'+esc(g('sqft'))+'</div>'+
+    '<div class="rev-row"><span class="rl">When</span><span class="rv">'+esc(dateLine)+'</span></div>'+
+    '<div class="rev-row"><span class="rl">Where</span><span class="rv">'+esc(getFullAddress())+'</span></div>'+
+    '<div class="rev-row"><span class="rl">Size</span><span class="rv">'+esc(g('sqft'))+'</span></div>'+
     '<div class="rev-div"></div>'+
     '<div class="rev-name">'+esc(g('fn'))+'</div>'+
     '<div class="rev-meta">'+esc(g('ph'))+' · '+esc(g('em'))+'</div>'+
@@ -424,7 +427,7 @@ async function loadReviewLoyalty(){
     if(total%5===0){
       box.innerHTML='<div class="rev-loy">'+stars+'<br><b>This booking earns your free 1-hour content shoot!</b> &#127881;</div>';
     }else{
-      box.innerHTML='<div class="rev-loy">'+stars+'<br>This will be your <b>'+pos+'/5</b> All-In-One shoot &mdash; '+(5-pos)+' more for a free content shoot.</div>';
+      box.innerHTML='<div class="rev-loy">'+stars+'<br>This will be your <b>'+pos+'/5</b> All-In-One shoot &mdash; '+(5-pos)+' more for a free 1-hour content shoot.</div>';
     }
   }catch(e){box.innerHTML='';}
 }
