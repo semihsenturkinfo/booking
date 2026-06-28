@@ -72,6 +72,15 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
 .cdet{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-size:14px;gap:12px}
 .cdet span:first-child{color:var(--text2);white-space:nowrap}
 .cdet span:last-child{text-align:right}
+.rev-pkg{font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px}
+.rev-meta{font-size:14px;color:var(--text2);line-height:1.65}
+.rev-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px}
+.rev-div{height:1px;background:var(--border);margin:13px 0}
+.rev-extras{margin-top:13px;display:flex;flex-direction:column;gap:6px}
+.rev-x{display:flex;justify-content:space-between;gap:12px;font-size:13px}
+.rev-x span:first-child{color:var(--text3)}
+.rev-x span:last-child{text-align:right;color:var(--text2)}
+.rev-loy{margin-top:13px;padding:11px 13px;background:rgba(126,140,84,0.10);border:1px solid #7E8C54;border-radius:var(--rsm);font-size:13px;color:var(--text);line-height:1.5;text-align:center}
 .pendbox{background:#292108;border:1px solid #78350f;border-radius:var(--radius);padding:1.5rem;text-align:center;margin-bottom:1rem}
 .pendtitle{font-size:17px;font-weight:600;color:#fbbf24;margin-bottom:6px}
 .pendsub{font-size:14px;color:#d97706}
@@ -133,7 +142,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
     <p class="sub">Pick your date and time, then tell us about the property.</p>
     <div class="card">
       <div class="fg">
-        <div class="fgp"><label>Shoot date</label><input type="date" id="shootdate" onchange="ck2a()" onclick="try{this.showPicker()}catch(e){}" style="cursor:pointer"></div>
+        <div class="fgp"><label>Shoot date</label><input type="date" id="shootdate" onchange="ck2a()" onclick="try{this.showPicker()}catch(e){}" style="cursor:pointer"><div id="weekend-msg" style="display:none;font-size:12px;color:#e07a5f;margin-top:6px;line-height:1.4">Weekends aren&rsquo;t available &mdash; please pick a weekday (Mon&ndash;Fri).</div></div>
         <div class="fgp">
           <label>Time</label>
           <select id="shoottime" onchange="ck2a()">
@@ -328,6 +337,20 @@ function goS(n){
 
 
 function ck2a(){
+  // Block weekends — shoots are weekdays only
+  const sdEl=document.getElementById('shootdate');
+  const msg=document.getElementById('weekend-msg');
+  if(sdEl&&sdEl.value){
+    const p=sdEl.value.split('-').map(Number);
+    const dow=new Date(p[0],p[1]-1,p[2]).getDay();
+    if(dow===0||dow===6){
+      sdEl.value='';
+      if(msg)msg.style.display='block';
+      document.getElementById('bs2a').disabled=true;
+      return;
+    }
+  }
+  if(msg)msg.style.display='none';
   const ok=['shootdate','shoottime','street','city','sqft'].every(id=>document.getElementById(id).value.trim()!=='');
   const orientGrp=document.getElementById('orientation-group');
   const orientOk=orientGrp.style.display==='none'||document.getElementById('orientation').value!=='';
@@ -367,22 +390,43 @@ function estimateHTML(){
 }
 function buildReview(){
   const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();
-  const rows=[
-    ['Package',g('pk')],
-    ['Address',getFullAddress()],
-    ['Approx. sq ft',g('sqft')],
-    ['Lockbox / access',g('lockbox')||'—'],
-  ];
-  if(orient)rows.push(['Video orientation',orient]);
-  rows.push(
-    ['Date',sd?fmtD(sd):''],
-    ['Time',sl?sl.lbl:''],
-    ['Name',g('fn')],
-    ['Phone',g('ph')],
-    ['Email',g('em')],
-    ['Notes',g('nt')||'—']
-  );
-  document.getElementById('revcard').innerHTML=rows.map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('')+estimateHTML();
+  const esc=s=>String(s==null?'':s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+  const dateLine=(sd?fmtD(sd):'')+(sl?' · '+sl.lbl:'');
+
+  const extras=[];
+  if(orient)extras.push(['Video',orient]);
+  if(g('lockbox'))extras.push(['Access',g('lockbox')]);
+  if(g('nt'))extras.push(['Notes',g('nt')]);
+  const extrasHTML=extras.length?'<div class="rev-extras">'+extras.map(([k,v])=>'<div class="rev-x"><span>'+k+'</span><span>'+esc(v)+'</span></div>').join('')+'</div>':'';
+
+  const html=
+    '<div class="rev-pkg">'+esc(g('pk'))+'</div>'+
+    '<div class="rev-meta">'+esc(dateLine)+'</div>'+
+    '<div class="rev-meta">'+esc(getFullAddress())+'</div>'+
+    '<div class="rev-meta">'+esc(g('sqft'))+'</div>'+
+    '<div class="rev-div"></div>'+
+    '<div class="rev-name">'+esc(g('fn'))+'</div>'+
+    '<div class="rev-meta">'+esc(g('ph'))+' · '+esc(g('em'))+'</div>'+
+    extrasHTML;
+  document.getElementById('revcard').innerHTML=html+'<div id="rev-loyalty"></div>'+estimateHTML();
+  loadReviewLoyalty();
+}
+async function loadReviewLoyalty(){
+  const box=document.getElementById('rev-loyalty');if(!box)return;
+  const pkg=g('pk'),email=g('em'),name=g('fn');
+  if(!pkg.startsWith('All-In-One')){box.innerHTML='';return;}
+  try{
+    const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'loyalty_check',email,name})});
+    const d=await res.json();
+    const total=(d.priorCount||0)+1;
+    const pos=total%5===0?5:total%5;
+    const stars='&#11088;'.repeat(pos)+'&#9898;'.repeat(5-pos);
+    if(total%5===0){
+      box.innerHTML='<div class="rev-loy">'+stars+'<br><b>This booking earns your free 1-hour content shoot!</b> &#127881;</div>';
+    }else{
+      box.innerHTML='<div class="rev-loy">'+stars+'<br>This will be your <b>'+pos+'/5</b> All-In-One shoot &mdash; '+(5-pos)+' more for a free content shoot.</div>';
+    }
+  }catch(e){box.innerHTML='';}
 }
 async function submit(){
   const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();const aiAnim=g('ai-animations');
