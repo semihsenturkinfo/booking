@@ -74,7 +74,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
 .cdet span:last-child{text-align:right}
 .rev-pkg{font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px}
 .rev-row{display:flex;gap:12px;font-size:14px;line-height:1.55;padding:4px 0}
-.rev-row .rl{flex:0 0 52px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);padding-top:3px}
+.rev-row .rl{flex:0 0 66px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);padding-top:3px;white-space:nowrap}
 .rev-row .rv{color:var(--text);flex:1}
 .rev-meta{font-size:14px;color:var(--text2);line-height:1.65}
 .rev-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px}
@@ -391,6 +391,16 @@ function estimateHTML(){
   const note='<div style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:var(--rsm)"><span style="font-size:14px;line-height:1.4;flex-shrink:0;filter:grayscale(1);opacity:.65">&#9888;&#65039;</span><span style="font-size:12px;color:var(--text2);line-height:1.5;font-weight:500">This is an estimate &mdash; travel fee is not included yet'+(e.sizeUnknown?', and property size is still TBD':'')+'. Your final price is confirmed after the shoot.</span></div>';
   return '<div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border2)"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text2);text-transform:uppercase;margin-bottom:10px">Price estimate</div>'+breakdown+totalRow+note+'</div>';
 }
+function deliveryLines(pkg){
+  const p=String(pkg||'');const lines=[];
+  let still='';
+  if(p.startsWith('All-In-One')||p.startsWith('Photo + iGUIDE'))still='Photos &amp; iGUIDE';
+  else if(p.startsWith('Listing Photos'))still='Photos';
+  else if(p.startsWith('iGUIDE'))still='iGUIDE';
+  if(still)lines.push(still+': next day');
+  if(p.startsWith('All-In-One')||p.startsWith('Listing Video'))lines.push('Video: 2&ndash;3 business days');
+  return lines;
+}
 function buildReview(){
   const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();
   const esc=s=>String(s==null?'':s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
@@ -407,6 +417,7 @@ function buildReview(){
     '<div class="rev-row"><span class="rl">Where</span><span class="rv">'+esc(getFullAddress())+'</span></div>'+
     '<div class="rev-row"><span class="rl">Size</span><span class="rv">'+esc(g('sqft'))+'</span></div>'+
     (orient?'<div class="rev-row"><span class="rl">Video</span><span class="rv">'+esc(orient)+'</span></div>':'')+
+    (deliveryLines(g('pk')).length?'<div class="rev-row"><span class="rl">Delivery</span><span class="rv">'+deliveryLines(g('pk')).join('<br>')+'</span></div>':'')+
     '<div class="rev-div"></div>'+
     '<div class="rev-name">'+esc(g('fn'))+'</div>'+
     '<div class="rev-meta">'+esc(g('ph'))+' · '+esc(g('em'))+'</div>'+
@@ -444,7 +455,9 @@ async function submit(){
   }catch(e){console.error('Notion save failed:',e);renderLoyalty(null)}
   st.bk.push(b);sv();
   rememberDetails(b);
-  document.getElementById('pendsum').innerHTML=[['Package',b.pkg],['Date',b.dateD],['Time',b.slot],['Name',b.name],['Address',b.addr]].map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('')+estimateHTML();
+  const pend=[['Package',b.pkg],['Date',b.dateD],['Time',b.slot],['Name',b.name],['Address',b.addr]];
+  const dl=deliveryLines(b.pkg);if(dl.length)pend.push(['Delivery',dl.join(' &middot; ')]);
+  document.getElementById('pendsum').innerHTML=pend.map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('')+estimateHTML();
   goS(4);
 }
 // --- Remember details on THIS device only (localStorage, never leaves browser) ---
