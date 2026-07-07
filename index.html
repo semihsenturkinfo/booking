@@ -203,6 +203,7 @@ input::placeholder,textarea::placeholder{color:#4a4a48;opacity:0.5}
         <div class="fgp"><label>Phone</label><input type="tel" id="ph" autocomplete="tel" placeholder="(519) 555-0100" oninput="ck2b()"></div>
         <div class="fgp"><label>Email</label><input type="email" id="em" autocomplete="email" placeholder="jane@realty.com" oninput="ck2b()"></div>
         <div class="fgp full"><label>Notes (optional)</label><textarea id="nt" placeholder="Parking info, special requests..."></textarea></div>
+        <input type="text" id="hp_web" autocomplete="off" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
       </div>
     </div>
     <div class="brow">
@@ -447,6 +448,8 @@ async function submit(){
   const est=estimateTotal();let sqftDisplay=g('sqft');
   if(est&&sqftDisplay&&sqftDisplay!=='Not sure')sqftDisplay+=est.size>0?' (+CA$'+est.size+')':' (included)';
   const b={id:Date.now(),date:fmt(sd),dateD:fmtD(sd),sid:getShootSlotId(),slot:sl.lbl,block:sl.block,name:g('fn'),phone:g('ph'),email:g('em'),addr:getFullAddress(),sqft:sqftDisplay,lockbox:g('lockbox'),pkg:g('pk'),orientation:orient,aiAnimations:aiAnim,notes:g('nt'),turnaroundAck:true,status:'pending',created:new Date().toISOString(),shootDateText:fmt(sd)};
+  b.estimate=estimateTotal();
+  b.website=(document.getElementById('hp_web')||{}).value||'';
   try {
     const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'create',booking:b})});
     const data=await res.json();
