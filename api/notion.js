@@ -157,16 +157,17 @@ export default async function handler(req, res) {
             booking.orientation ? ['Video', booking.orientation] : null,
           ].filter(Boolean);
           const rowsHtml = rows.map(([k, v]) =>
-            `<tr><td style="padding:5px 16px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:top;white-space:nowrap">${k}</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${escH(v)}</td></tr>`
+            `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:top;white-space:nowrap">${k}</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${escH(v)}</td></tr>`
           ).join('') + (delivery.length
-            ? `<tr><td style="padding:5px 16px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:top;white-space:nowrap">Delivery</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${delivery.join('<br>')}</td></tr>`
+            ? `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:top;white-space:nowrap">Delivery</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${delivery.join('<br>')}</td></tr>`
             : '');
 
           let loyaltyLine = '';
           if (loyalty) {
+            const starsHtml = `<span style="font-size:16px;letter-spacing:2px"><span style="color:#7E8C54">${'\u2605\uFE0E'.repeat(loyalty.pos)}</span><span style="color:#4a4a46">${'\u2605\uFE0E'.repeat(5 - loyalty.pos)}</span></span>`;
             const inner = loyalty.rewardEarned
               ? `<div style="padding:14px 16px;background:#242a1c;border:1px solid #7E8C54;border-radius:10px;font-size:14px;color:#f0efed;line-height:1.5"><b>You just earned a FREE 1-hour content shoot!</b> That&rsquo;s 5 All-In-One bookings &mdash; I&rsquo;ll reach out to schedule it. &#127881;</div>`
-              : `<div style="font-size:13px;color:#b5b5b0;line-height:1.6">Loyalty: <span style="font-size:15px">${'⭐'.repeat(loyalty.pos)}${'⚪'.repeat(5 - loyalty.pos)}</span> &mdash; ${loyalty.pos}/5 All-In-One shoots. ${5 - loyalty.pos} more for a free 1-hour content shoot.</div>`;
+              : `<div style="font-size:13px;color:#b5b5b0;line-height:1.6">Loyalty: ${starsHtml} &mdash; ${loyalty.pos}/5 All-In-One shoots. ${5 - loyalty.pos} more for a free 1-hour content shoot.</div>`;
             loyaltyLine = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">${inner}</div>`;
           }
 
@@ -191,19 +192,30 @@ export default async function handler(req, res) {
 </div>`;
           }
 
-          const html = `<div style="max-width:560px;margin:0 auto;background:#1a1a19;border-radius:12px;padding:28px 24px;font-family:Arial,Helvetica,sans-serif;color:#f0efed">
-  <h2 style="font-weight:900;letter-spacing:-0.5px;margin:0 0 6px;color:#fff">Booking request received</h2>
+          const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
+<style>@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@900&display=swap');:root{color-scheme:dark;supported-color-schemes:dark}</style>
+</head>
+<body style="margin:0;padding:12px;background:#111110;background-image:linear-gradient(#111110,#111110)">
+<div style="max-width:560px;margin:0 auto;background:#1a1a19;background-image:linear-gradient(#1a1a19,#1a1a19);border-radius:12px;padding:28px 24px;font-family:Arial,Helvetica,sans-serif;color:#f0efed">
+  <h2 style="font-family:'Rubik','Arial Black',Arial,Helvetica,sans-serif;font-weight:900;font-size:20px;letter-spacing:-0.5px;margin:0 0 6px;color:#fff">Booking request received</h2>
   <p style="margin:0 0 18px;color:#9a9a95;font-size:14px;line-height:1.5">Thanks ${firstName}! Your request is pending &mdash; I&rsquo;ll reach out shortly to confirm the date and time. Here&rsquo;s what I have:</p>
   <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${rowsHtml}</table>
   ${priceHtml}
   ${loyaltyLine}
-  <div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">
+  <div style="margin-top:22px;padding-top:18px;border-top:1px solid #33332f">
     <p style="margin:0;font-size:14px;color:#b5b5b0">Questions or changes? Just reply to this email.</p>
-    <p style="margin:16px 0 0;font-size:14px;color:#b5b5b0">Ciao ciao,</p>
-    <div style="margin-top:10px;font-family:'Rubik',Arial,Helvetica,sans-serif;font-weight:900;font-size:19px;letter-spacing:-0.5px;text-transform:uppercase;color:#fff">Semih Senturk</div>
-    <div style="margin-top:2px;font-size:13px;color:#7E8C54">Videographer &middot; Photographer</div>
+    <p style="margin:20px 0 0;font-size:14px;color:#b5b5b0">Ciao ciao,</p>
+    <div style="margin-top:14px;font-family:'Rubik','Arial Black',Arial,sans-serif;font-weight:900;font-size:20px;color:#f0ede8;letter-spacing:-0.05em">SEMIH SENTURK</div>
+    <div style="margin-top:3px;font-size:13px;color:#7E8C54">Videographer &middot; Photographer</div>
   </div>
-</div>`;
+</div>
+</body>
+</html>`;
 
           await transporter.sendMail({
             from: `"Semih Senturk" <${process.env.GMAIL_USER}>`,
