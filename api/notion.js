@@ -10,18 +10,110 @@ const NOTION_HEADERS = {
 // Crude per-warm-instance rate limit (serverless: resets on cold start; catches bursts/bots, not targeted attacks)
 const RL = new Map();
 
+const esc = (s) => String(s == null ? '' : s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+
+// Build the "Booking confirmed" email from stored booking data
+function buildBookingEmail(d) {
+  const firstName = esc(String(d.name || '').trim().split(' ')[0] || 'there');
+  const pkgStr = String(d.pkg || '');
+
+  const delivery = [];
+  if (pkgStr.startsWith('All-In-One') || pkgStr.startsWith('Photo + iGUIDE')) delivery.push('Photos &amp; iGUIDE: next day');
+  else if (pkgStr.startsWith('Listing Photos')) delivery.push('Photos: next day');
+  else if (pkgStr.startsWith('iGUIDE')) delivery.push('iGUIDE: next day');
+  if (pkgStr.startsWith('All-In-One') || pkgStr.startsWith('Listing Video')) delivery.push('Video: 2&ndash;3 business days');
+
+  const rows = [
+    ['Package', d.pkg],
+    ['Date', d.dateD || d.date],
+    ['Time', d.slot],
+    ['Address', d.addr],
+    d.sqft ? ['Size', d.sqft] : null,
+    d.orientation ? ['Video', d.orientation] : null,
+  ].filter(Boolean);
+  const rowsHtml = rows.map(([k, v]) =>
+    `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:baseline;white-space:nowrap">${k}</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${esc(v)}</td></tr>`
+  ).join('') + (delivery.length
+    ? `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:baseline;white-space:nowrap">Delivery</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${delivery.join('<br>')}</td></tr>`
+    : '');
+
+  let loyaltyLine = '';
+  const loyalty = d.loyalty;
+  if (loyalty && Number.isFinite(Number(loyalty.pos))) {
+    const pos = Math.min(5, Math.max(1, Number(loyalty.pos)));
+    const starsHtml = `<span style="font-size:16px;letter-spacing:2px"><span style="color:#7E8C54">${'\u2605\uFE0E'.repeat(pos)}</span><span style="color:#4a4a46">${'\u2605\uFE0E'.repeat(5 - pos)}</span></span>`;
+    const inner = loyalty.rewardEarned
+      ? `<div style="padding:14px 16px;background:#242a1c;border:1px solid #7E8C54;border-radius:10px;font-size:14px;color:#f0efed;line-height:1.5"><div style="font-size:16px;letter-spacing:2px;color:#7E8C54;margin-bottom:6px">${'\u2605\uFE0E'.repeat(5)}</div><b>You just earned a FREE 1-hour content shoot!</b> That&rsquo;s 5 All-In-One bookings &mdash; I&rsquo;ll reach out to schedule it! &#127881;</div>`
+      : `<div style="font-size:13px;color:#b5b5b0;line-height:1.6">Loyalty: ${starsHtml} &mdash; ${pos}/5 All-In-One shoots. ${5 - pos} more for a free 1-hour content shoot!</div>`;
+    loyaltyLine = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">${inner}</div>`;
+  }
+
+  // Price estimate (numbers validated; skip section if payload is malformed)
+  let priceHtml = '';
+  const est = d.estimate;
+  const nums = est && [est.base, est.size, est.orient, est.ai, est.total].map(Number);
+  if (est && nums.every(v => Number.isFinite(v) && v >= 0 && v < 100000)) {
+    const [pBase, pSize, pOrient, pAi, pTotal] = nums;
+    const prows = [['Base package', 'CA$' + pBase]];
+    prows.push(['Property size', est.sizeUnknown ? 'TBD' : (pSize > 0 ? '+$' + pSize : 'Included')]);
+    if (pOrient > 0) prows.push(['Video orientation (both)', '+$' + pOrient]);
+    if (pAi > 0) prows.push(['AI animations', '+$' + pAi]);
+    const pbody = prows.map(([k, v]) =>
+      `<tr><td style="padding:4px 16px 4px 0;font-size:13px;color:#9a9a95">${k}</td><td style="padding:4px 0;font-size:13px;color:#f0efed;text-align:right">${v}</td></tr>`
+    ).join('');
+    const amt = (est.sizeUnknown ? 'from ' : '') + 'CA$' + pTotal + ' + HST';
+    priceHtml = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">
+  <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a8a85;text-transform:uppercase;margin-bottom:8px">Price estimate</div>
+  <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${pbody}<tr><td style="padding:14px 16px 0 0;font-size:14px;font-weight:700;color:#fff">Estimated total</td><td style="padding:14px 0 0;font-size:14px;font-weight:700;color:#fff;text-align:right">${amt}</td></tr></table>
+  <p style="margin:10px 0 0;font-size:12px;color:#8a8a85">Estimate only &mdash; a travel fee applies beyond 50 km from Kitchener${est.sizeUnknown ? ' (property size TBD)' : ''}</p>
+</div>`;
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
+<style>@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@600;900&display=swap');:root{color-scheme:dark;supported-color-schemes:dark}</style>
+</head>
+<body style="margin:0;padding:12px;background:#111110;background-image:linear-gradient(#111110,#111110)">
+<div style="max-width:560px;margin:0 auto;background:#1a1a19;background-image:linear-gradient(#1a1a19,#1a1a19);border-radius:12px;padding:28px 24px;font-family:Arial,Helvetica,sans-serif;color:#f0efed">
+  <h2 style="font-family:'Rubik','Arial Black',Arial,Helvetica,sans-serif;font-weight:600;font-size:20px;letter-spacing:-0.5px;margin:0 0 6px;color:#fff">Booking confirmed</h2>
+  <p style="margin:0 0 18px;color:#9a9a95;font-size:14px;line-height:1.5">Thanks ${firstName}! You&rsquo;re all set &mdash; here are the details:</p>
+  <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${rowsHtml}</table>
+  ${priceHtml}
+  ${loyaltyLine}
+  <div style="margin-top:22px;padding-top:18px;border-top:1px solid #33332f">
+    <p style="margin:0;font-size:14px;color:#b5b5b0">Questions or changes? Just reply to this email.</p>
+    <p style="margin:20px 0 0;font-size:14px;color:#b5b5b0">Ciao ciao,</p>
+    <img src="https://semihs.vercel.app/wordmark.png" width="159" alt="SEMIH SENTURK" style="display:block;margin-top:14px;border:0;font-family:'Rubik','Arial Black',Arial,sans-serif;font-weight:900;font-size:20px;color:#f0ede8;letter-spacing:-0.05em">
+    <div style="margin-top:3px;font-size:13px;color:#7E8C54">Videographer &middot; Photographer</div>
+  </div>
+</div>
+</body>
+</html>`;
+
+  const subject = d.addr ? `Booking confirmed — ${String(d.addr).slice(0, 120)}` : 'Booking confirmed';
+  return { subject, html };
+}
+
+async function sendGmail(to, subject, html) {
+  const nodemailer = (await import('nodemailer')).default;
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD }
+  });
+  await transporter.sendMail({ from: `"Semih Senturk" <${process.env.GMAIL_USER}>`, to, subject, html });
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-secret');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const secret = req.headers['x-api-secret'];
-  if (secret !== process.env.API_SECRET) return res.status(403).json({ error: 'Forbidden' });
-
   try {
-    if (req.method !== 'POST') return res.status(405).end();
-
     // Rate limit: max 8 requests/min per IP (per warm instance)
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
     const now = Date.now();
@@ -29,6 +121,54 @@ export default async function handler(req, res) {
     if (rl && now - rl.t < 60000) { if (++rl.n > 8) return res.status(429).json({ error: 'Too many requests' }); }
     else RL.set(ip, { n: 1, t: now });
     if (RL.size > 5000) RL.clear();
+
+    // --- GET: confirm link clicked from Notion (own secret; sends the ONE booking email) ---
+    if (req.method === 'GET') {
+      const q = req.query || {};
+      const page = (msg) => {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(200).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#1a1a19;color:#f0efed;font-family:Arial,Helvetica,sans-serif"><div style="max-width:420px;margin:18vh auto 0;padding:0 20px;text-align:center;font-size:16px;line-height:1.7">${msg}</div></body></html>`);
+      };
+      if (q.action !== 'confirm') return res.status(404).end();
+      if (!process.env.CONFIRM_SECRET || q.k !== process.env.CONFIRM_SECRET) return res.status(403).send('Forbidden');
+      if (!q.id) return page('&#10060; Missing booking id.');
+
+      const pgRes = await fetch(`https://api.notion.com/v1/pages/${q.id}`, { headers: NOTION_HEADERS });
+      const pg = await pgRes.json();
+      if (!pgRes.ok) return page('&#10060; Booking not found in Notion.');
+
+      const title = (pg.properties?.['Full Name (1)']?.title || []).map(t => t.plain_text).join('');
+      if (title.startsWith('\u2705')) return page('This booking was <b>already confirmed</b> &mdash; no new email sent.');
+
+      const dataRaw = (pg.properties?.['EmailData']?.rich_text || []).map(t => t.plain_text).join('');
+      let d = null;
+      try { d = JSON.parse(dataRaw); } catch (e) {}
+      if (!d || !d.email) return page('&#10060; No email data stored on this booking (older bookings don&rsquo;t have it).');
+
+      const toAddr = String(d.email).trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toAddr) || toAddr.length >= 200) return page('&#10060; Invalid customer email address.');
+
+      const { subject, html } = buildBookingEmail(d);
+      try {
+        await sendGmail(toAddr, subject, html);
+      } catch (e) {
+        console.error('Confirm email failed:', e.message);
+        return page('&#10060; Email failed to send: ' + esc(e.message));
+      }
+
+      try {
+        await fetch(`https://api.notion.com/v1/pages/${q.id}`, {
+          method: 'PATCH', headers: NOTION_HEADERS,
+          body: JSON.stringify({ properties: { 'Full Name (1)': { title: [{ text: { content: '\u2705 ' + title } }] } } })
+        });
+      } catch (e) { console.error('Mark confirmed failed:', e.message); }
+
+      return page(`&#9989; <b>Confirmed!</b><br>Email sent to ${esc(toAddr)}.`);
+    }
+
+    const secret = req.headers['x-api-secret'];
+    if (secret !== process.env.API_SECRET) return res.status(403).json({ error: 'Forbidden' });
+    if (req.method !== 'POST') return res.status(405).end();
 
     const { action, booking } = req.body;
 
@@ -89,6 +229,17 @@ export default async function handler(req, res) {
       if (isLarge) titleName = '⚠️ ' + titleName + ' ⚠️';
       properties['Full Name (1)'] = { title: [{ text: { content: titleName } }] };
 
+      // Stash everything the confirmation email needs (sent later via the Confirm link)
+      const emailData = {
+        name: String(booking.name || ''), email: String(booking.email || ''),
+        pkg: String(booking.pkg || ''), date: String(booking.date || ''), dateD: String(booking.dateD || ''),
+        slot: String(booking.slot || ''), addr: String(booking.addr || ''), sqft: String(booking.sqft || ''),
+        orientation: String(booking.orientation || ''), estimate: booking.estimate || null,
+        loyalty: loyalty ? { pos: loyalty.pos, rewardEarned: loyalty.rewardEarned } : null
+      };
+      const emailJson = JSON.stringify(emailData).slice(0, 1900);
+      properties['EmailData'] = { rich_text: [{ text: { content: emailJson } }] };
+
       // Package-based colored icon for quick visual scanning in Notion
       let pkgIcon = '⚪';
       if (pkgStr.startsWith('All-In-One')) pkgIcon = '🟢';
@@ -104,6 +255,17 @@ export default async function handler(req, res) {
       });
       const result = await response.json();
       if (!response.ok) { console.error('Notion create error:', JSON.stringify(result)); return res.status(400).json({ error: result }); }
+
+      // Write the one-click Confirm link onto the page (needs the new pageId)
+      if (process.env.CONFIRM_SECRET) {
+        try {
+          const confirmUrl = `https://semihs.vercel.app/api/notion?action=confirm&id=${result.id}&k=${process.env.CONFIRM_SECRET}`;
+          await fetch(`https://api.notion.com/v1/pages/${result.id}`, {
+            method: 'PATCH', headers: NOTION_HEADERS,
+            body: JSON.stringify({ properties: { 'Confirm': { url: confirmUrl } } })
+          });
+        } catch (e) { console.error('Confirm link write failed:', e.message); }
+      }
 
       // --- Mirror booking to TickTick as a task (for Pomodoro + per-task time tracking) ---
       // No-op unless TICKTICK_ACCESS_TOKEN is set, so this never blocks a booking.
@@ -127,103 +289,6 @@ export default async function handler(req, res) {
           });
           if (!ttRes.ok) console.error('TickTick task error:', ttRes.status, await ttRes.text());
         } catch (e) { console.error('TickTick task failed:', e.message); }
-      }
-
-      // --- Confirmation email to customer via Gmail (non-blocking) ---
-      // No-op unless GMAIL_USER + GMAIL_APP_PASSWORD are set; never blocks a booking.
-      const toAddr = String(booking.email || '').trim();
-      if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toAddr) && toAddr.length < 200) {
-        try {
-          const nodemailer = (await import('nodemailer')).default;
-          const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD }
-          });
-          const escH = (s) => String(s == null ? '' : s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
-          const firstName = escH(String(booking.name || '').trim().split(' ')[0] || 'there');
-
-          const delivery = [];
-          if (pkgStr.startsWith('All-In-One') || pkgStr.startsWith('Photo + iGUIDE')) delivery.push('Photos &amp; iGUIDE: next day');
-          else if (pkgStr.startsWith('Listing Photos')) delivery.push('Photos: next day');
-          else if (pkgStr.startsWith('iGUIDE')) delivery.push('iGUIDE: next day');
-          if (pkgStr.startsWith('All-In-One') || pkgStr.startsWith('Listing Video')) delivery.push('Video: 2&ndash;3 business days');
-
-          const rows = [
-            ['Package', booking.pkg],
-            ['Date', booking.dateD || booking.date],
-            ['Time', booking.slot],
-            ['Address', booking.addr],
-            booking.sqft ? ['Size', booking.sqft] : null,
-            booking.orientation ? ['Video', booking.orientation] : null,
-          ].filter(Boolean);
-          const rowsHtml = rows.map(([k, v]) =>
-            `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:top;white-space:nowrap">${k}</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${escH(v)}</td></tr>`
-          ).join('') + (delivery.length
-            ? `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:top;white-space:nowrap">Delivery</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${delivery.join('<br>')}</td></tr>`
-            : '');
-
-          let loyaltyLine = '';
-          if (loyalty) {
-            const starsHtml = `<span style="font-size:16px;letter-spacing:2px"><span style="color:#7E8C54">${'\u2605\uFE0E'.repeat(loyalty.pos)}</span><span style="color:#4a4a46">${'\u2605\uFE0E'.repeat(5 - loyalty.pos)}</span></span>`;
-            const inner = loyalty.rewardEarned
-              ? `<div style="padding:14px 16px;background:#242a1c;border:1px solid #7E8C54;border-radius:10px;font-size:14px;color:#f0efed;line-height:1.5"><div style="font-size:16px;letter-spacing:2px;color:#7E8C54;margin-bottom:6px">${'\u2605\uFE0E'.repeat(5)}</div><b>You just earned a FREE 1-hour content shoot!</b> That&rsquo;s 5 All-In-One bookings &mdash; I&rsquo;ll reach out to schedule it! &#127881;</div>`
-              : `<div style="font-size:13px;color:#b5b5b0;line-height:1.6">Loyalty: ${starsHtml} &mdash; ${loyalty.pos}/5 All-In-One shoots. ${5 - loyalty.pos} more for a free 1-hour content shoot!</div>`;
-            loyaltyLine = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">${inner}</div>`;
-          }
-
-          // Price estimate (numbers validated server-side; skip section if payload is malformed)
-          let priceHtml = '';
-          const est = booking.estimate;
-          const nums = est && [est.base, est.size, est.orient, est.ai, est.total].map(Number);
-          if (est && nums.every(v => Number.isFinite(v) && v >= 0 && v < 100000)) {
-            const [pBase, pSize, pOrient, pAi, pTotal] = nums;
-            const prows = [['Base package', 'CA$' + pBase]];
-            prows.push(['Property size', est.sizeUnknown ? 'TBD' : (pSize > 0 ? '+$' + pSize : 'Included')]);
-            if (pOrient > 0) prows.push(['Video orientation (both)', '+$' + pOrient]);
-            if (pAi > 0) prows.push(['AI animations', '+$' + pAi]);
-            const pbody = prows.map(([k, v]) =>
-              `<tr><td style="padding:4px 16px 4px 0;font-size:13px;color:#9a9a95">${k}</td><td style="padding:4px 0;font-size:13px;color:#f0efed;text-align:right">${v}</td></tr>`
-            ).join('');
-            const amt = (est.sizeUnknown ? 'from ' : '') + 'CA$' + pTotal + ' + HST';
-            priceHtml = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">
-  <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a8a85;text-transform:uppercase;margin-bottom:8px">Price estimate</div>
-  <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${pbody}<tr><td style="padding:9px 16px 0 0;font-size:14px;font-weight:600;color:#fff;border-top:1px solid #33332f">Estimated total</td><td style="padding:9px 0 0;font-size:14px;font-weight:700;color:#fff;text-align:right;border-top:1px solid #33332f">${amt}</td></tr></table>
-  <p style="margin:10px 0 0;font-size:12px;color:#8a8a85">Estimate only &mdash; a travel fee applies beyond 50 km from Kitchener${est.sizeUnknown ? ' (property size TBD)' : ''}</p>
-</div>`;
-          }
-
-          const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="color-scheme" content="dark">
-<meta name="supported-color-schemes" content="dark">
-<style>@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@600;900&display=swap');:root{color-scheme:dark;supported-color-schemes:dark}</style>
-</head>
-<body style="margin:0;padding:12px;background:#111110;background-image:linear-gradient(#111110,#111110)">
-<div style="max-width:560px;margin:0 auto;background:#1a1a19;background-image:linear-gradient(#1a1a19,#1a1a19);border-radius:12px;padding:28px 24px;font-family:Arial,Helvetica,sans-serif;color:#f0efed">
-  <h2 style="font-family:'Rubik','Arial Black',Arial,Helvetica,sans-serif;font-weight:600;font-size:20px;letter-spacing:-0.5px;margin:0 0 6px;color:#fff">Booking request received</h2>
-  <p style="margin:0 0 18px;color:#9a9a95;font-size:14px;line-height:1.5">Thanks ${firstName}! Your request is pending &mdash; I&rsquo;ll reach out shortly to confirm the date and time. Here&rsquo;s what I have:</p>
-  <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${rowsHtml}</table>
-  ${priceHtml}
-  ${loyaltyLine}
-  <div style="margin-top:22px;padding-top:18px;border-top:1px solid #33332f">
-    <p style="margin:0;font-size:14px;color:#b5b5b0">Questions or changes? Just reply to this email.</p>
-    <p style="margin:20px 0 0;font-size:14px;color:#b5b5b0">Ciao ciao,</p>
-    <img src="https://semihs.vercel.app/wordmark.png" width="159" alt="SEMIH SENTURK" style="display:block;margin-top:14px;border:0;font-family:'Rubik','Arial Black',Arial,sans-serif;font-weight:900;font-size:20px;color:#f0ede8;letter-spacing:-0.05em">
-    <div style="margin-top:3px;font-size:13px;color:#7E8C54">Videographer &middot; Photographer</div>
-  </div>
-</div>
-</body>
-</html>`;
-
-          await transporter.sendMail({
-            from: `"Semih Senturk" <${process.env.GMAIL_USER}>`,
-            to: toAddr,
-            subject: booking.addr ? `Booking request received — ${String(booking.addr).slice(0, 120)}` : 'Booking request received',
-            html
-          });
-        } catch (e) { console.error('Confirmation email failed:', e.message); }
       }
 
       return res.status(200).json({ pageId: result.id, loyalty });
