@@ -443,7 +443,13 @@ async function loadReviewLoyalty(){
     }
   }catch(e){box.innerHTML='';}
 }
+let submitInFlight=false;
 async function submit(){
+  if(submitInFlight)return;           // double-click / double-tap guard
+  submitInFlight=true;
+  const sbtn=document.querySelector('#s3 .btnp');
+  if(sbtn){sbtn.disabled=true;sbtn.textContent='Sending...';}
+  const unlock=()=>{submitInFlight=false;if(sbtn){sbtn.disabled=false;sbtn.textContent='Submit booking';}};
   const sd=getShootDate();const sl=SLOTS.find(s=>s.id===getShootSlotId());const orient=getOrientation();const aiAnim=g('ai-animations');
   const est=estimateTotal();let sqftDisplay=g('sqft');
   if(est&&sqftDisplay&&sqftDisplay!=='Not sure')sqftDisplay+=est.size>0?' (+CA$'+est.size+')':' (included)';
@@ -454,7 +460,7 @@ async function submit(){
     const res=await fetch('/api/notion',{method:'POST',headers:{'Content-Type':'application/json','x-api-secret':'mK7pXn3qR9vL5wZ2'},body:JSON.stringify({action:'create',booking:b})});
     const data=await res.json();
     if(data.pageId)b.notionPageId=data.pageId;
-    renderLoyalty(data.loyalty);
+    if(!data.duplicate)renderLoyalty(data.loyalty);
   }catch(e){console.error('Notion save failed:',e);renderLoyalty(null)}
   st.bk.push(b);sv();
   rememberDetails(b);
@@ -462,6 +468,7 @@ async function submit(){
   const dl=deliveryLines(b.pkg);if(dl.length)pend.push(['Delivery',dl.join(' &middot; ')]);
   document.getElementById('pendsum').innerHTML=pend.map(([k,v])=>'<div class="cdet"><span>'+k+'</span><span>'+v+'</span></div>').join('')+estimateHTML();
   goS(4);
+  unlock();  // safe: success screen replaced the review screen; button reset for next booking
 }
 // --- Remember details on THIS device only (localStorage, never leaves browser) ---
 const SS_REMEMBER_KEY='ss_contact_v1';
