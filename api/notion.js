@@ -157,16 +157,17 @@ export default async function handler(req, res) {
             booking.orientation ? ['Video', booking.orientation] : null,
           ].filter(Boolean);
           const rowsHtml = rows.map(([k, v]) =>
-            `<tr><td style="padding:6px 16px 6px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#999;vertical-align:top;white-space:nowrap">${k}</td><td style="padding:6px 0;font-size:14px;color:#1a1a19">${escH(v)}</td></tr>`
+            `<tr><td style="padding:5px 16px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:top;white-space:nowrap">${k}</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${escH(v)}</td></tr>`
           ).join('') + (delivery.length
-            ? `<tr><td style="padding:6px 16px 6px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#999;vertical-align:top;white-space:nowrap">Delivery</td><td style="padding:6px 0;font-size:14px;color:#1a1a19">${delivery.join('<br>')}</td></tr>`
+            ? `<tr><td style="padding:5px 16px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:top;white-space:nowrap">Delivery</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${delivery.join('<br>')}</td></tr>`
             : '');
 
           let loyaltyLine = '';
           if (loyalty) {
-            loyaltyLine = loyalty.rewardEarned
-              ? `<p style="margin:18px 0 0;padding:12px 14px;background:#f2f5ec;border:1px solid #7E8C54;border-radius:8px;font-size:14px;color:#1a1a19"><b>You just earned a FREE 1-hour content shoot!</b> That&rsquo;s 5 All-In-One bookings &mdash; I&rsquo;ll reach out to schedule it. &#127881;</p>`
-              : `<p style="margin:18px 0 0;font-size:13px;color:#777">Loyalty: ${'⭐'.repeat(loyalty.pos)}${'⚪'.repeat(5 - loyalty.pos)} &mdash; ${loyalty.pos}/5 All-In-One shoots. ${5 - loyalty.pos} more for a free 1-hour content shoot.</p>`;
+            const inner = loyalty.rewardEarned
+              ? `<div style="padding:14px 16px;background:#242a1c;border:1px solid #7E8C54;border-radius:10px;font-size:14px;color:#f0efed;line-height:1.5"><b>You just earned a FREE 1-hour content shoot!</b> That&rsquo;s 5 All-In-One bookings &mdash; I&rsquo;ll reach out to schedule it. &#127881;</div>`
+              : `<div style="font-size:13px;color:#b5b5b0;line-height:1.6">Loyalty: <span style="font-size:15px">${'⭐'.repeat(loyalty.pos)}${'⚪'.repeat(5 - loyalty.pos)}</span> &mdash; ${loyalty.pos}/5 All-In-One shoots. ${5 - loyalty.pos} more for a free 1-hour content shoot.</div>`;
+            loyaltyLine = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">${inner}</div>`;
           }
 
           // Price estimate (numbers validated server-side; skip section if payload is malformed)
@@ -180,24 +181,28 @@ export default async function handler(req, res) {
             if (pOrient > 0) prows.push(['Video orientation (both)', '+$' + pOrient]);
             if (pAi > 0) prows.push(['AI animations', '+$' + pAi]);
             const pbody = prows.map(([k, v]) =>
-              `<tr><td style="padding:4px 16px 4px 0;font-size:13px;color:#777">${k}</td><td style="padding:4px 0;font-size:13px;color:#1a1a19;text-align:right">${v}</td></tr>`
+              `<tr><td style="padding:4px 16px 4px 0;font-size:13px;color:#9a9a95">${k}</td><td style="padding:4px 0;font-size:13px;color:#f0efed;text-align:right">${v}</td></tr>`
             ).join('');
             const amt = (est.sizeUnknown ? 'from ' : '') + 'CA$' + pTotal + ' + HST';
-            priceHtml = `<div style="margin-top:22px;padding-top:14px;border-top:1px dashed #ddd">
-  <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#999;text-transform:uppercase;margin-bottom:8px">Price estimate</div>
-  <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:360px">${pbody}<tr><td style="padding:8px 16px 0 0;font-size:14px;font-weight:600;color:#1a1a19;border-top:1px solid #eee">Estimated total</td><td style="padding:8px 0 0;font-size:14px;font-weight:700;color:#1a1a19;text-align:right;border-top:1px solid #eee">${amt}</td></tr></table>
-  <p style="margin:10px 0 0;font-size:12px;color:#999">Estimate only &mdash; a travel fee applies for out-of-town properties${est.sizeUnknown ? ', and property size is still TBD' : ''}. Final price is confirmed after the shoot.</p>
+            priceHtml = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">
+  <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a8a85;text-transform:uppercase;margin-bottom:8px">Price estimate</div>
+  <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${pbody}<tr><td style="padding:9px 16px 0 0;font-size:14px;font-weight:600;color:#fff;border-top:1px solid #33332f">Estimated total</td><td style="padding:9px 0 0;font-size:14px;font-weight:700;color:#fff;text-align:right;border-top:1px solid #33332f">${amt}</td></tr></table>
+  <p style="margin:10px 0 0;font-size:12px;color:#8a8a85">Estimate only &mdash; a travel fee applies for out-of-town properties${est.sizeUnknown ? ' (property size TBD)' : ''}</p>
 </div>`;
           }
 
-          const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:8px;color:#1a1a19">
-  <h2 style="font-weight:900;letter-spacing:-0.5px;margin:24px 0 6px">Booking request received</h2>
-  <p style="margin:0 0 18px;color:#555;font-size:14px">Thanks ${firstName}! Your request is pending &mdash; I&rsquo;ll reach out shortly to confirm the date and time. Here&rsquo;s what I have:</p>
-  <table cellpadding="0" cellspacing="0" style="border-collapse:collapse">${rowsHtml}</table>
+          const html = `<div style="max-width:560px;margin:0 auto;background:#1a1a19;border-radius:12px;padding:28px 24px;font-family:Arial,Helvetica,sans-serif;color:#f0efed">
+  <h2 style="font-weight:900;letter-spacing:-0.5px;margin:0 0 6px;color:#fff">Booking request received</h2>
+  <p style="margin:0 0 18px;color:#9a9a95;font-size:14px;line-height:1.5">Thanks ${firstName}! Your request is pending &mdash; I&rsquo;ll reach out shortly to confirm the date and time. Here&rsquo;s what I have:</p>
+  <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${rowsHtml}</table>
   ${priceHtml}
   ${loyaltyLine}
-  <p style="margin:22px 0 0;font-size:14px;color:#333">Questions or changes? Just reply to this email.</p>
-  <p style="margin:16px 0 0;font-size:14px;color:#333">Ciao ciao,<br><b>Semih</b><br><span style="color:#7E8C54">Semih Senturk &mdash; Videographer &middot; Photographer</span></p>
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">
+    <p style="margin:0;font-size:14px;color:#b5b5b0">Questions or changes? Just reply to this email.</p>
+    <p style="margin:16px 0 0;font-size:14px;color:#b5b5b0">Ciao ciao,</p>
+    <div style="margin-top:10px;font-family:'Rubik',Arial,Helvetica,sans-serif;font-weight:900;font-size:19px;letter-spacing:-0.5px;text-transform:uppercase;color:#fff">Semih Senturk</div>
+    <div style="margin-top:2px;font-size:13px;color:#7E8C54">Videographer &middot; Photographer</div>
+  </div>
 </div>`;
 
           await transporter.sendMail({
