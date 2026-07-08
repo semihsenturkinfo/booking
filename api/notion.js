@@ -307,6 +307,44 @@ export default async function handler(req, res) {
         } catch (e) { console.error('Confirm link write failed:', e.message); }
       }
 
+      // --- Loyalty ledger: upsert one row per customer in a separate Notion DB (observational only; never blocks booking) ---
+      if (loyalty && process.env.LOYALTY_DB_ID) {
+        try {
+          const em = String(booking.email || '').trim().toLowerCase();
+          const stars = '⭐'.repeat(loyalty.pos) + '⚪'.repeat(5 - loyalty.pos);
+          const props = {
+            'Customer': { title: [{ text: { content: nameStr } }] },
+            'Email': { rich_text: [{ text: { content: em } }] },
+            'Total Shoots': { number: loyalty.total },
+            'Current Card': { rich_text: [{ text: { content: `${stars} (${loyalty.pos}/5)` } }] },
+            'Rewards Earned': { number: Math.floor(loyalty.total / 5) },
+          };
+          if (booking.date) props['Last Booking'] = { date: { start: String(booking.date) } };
+          if (loyalty.rewardEarned && booking.date) props['Last Reward'] = { date: { start: String(booking.date) } };
+
+          let rowId = null;
+          if (em) {
+            const lq = await fetch(`https://api.notion.com/v1/databases/${process.env.LOYALTY_DB_ID}/query`, {
+              method: 'POST', headers: NOTION_HEADERS,
+              body: JSON.stringify({ filter: { property: 'Email', rich_text: { equals: em } }, page_size: 1 })
+            });
+            const ld = await lq.json();
+            if (lq.ok && (ld.results || []).length) rowId = ld.results[0].id;
+            else if (!lq.ok) console.error('Ledger query error:', JSON.stringify(ld));
+          }
+          if (rowId) {
+            await fetch(`https://api.notion.com/v1/pages/${rowId}`, {
+              method: 'PATCH', headers: NOTION_HEADERS, body: JSON.stringify({ properties: props })
+            });
+          } else {
+            await fetch('https://api.notion.com/v1/pages', {
+              method: 'POST', headers: NOTION_HEADERS,
+              body: JSON.stringify({ parent: { database_id: process.env.LOYALTY_DB_ID }, properties: props })
+            });
+          }
+        } catch (e) { console.error('Loyalty ledger failed:', e.message); }
+      }
+
       // --- Mirror booking to TickTick (Pomodoro + per-task time tracking); no-op without token ---
       if (process.env.TICKTICK_ACCESS_TOKEN) {
         try {
