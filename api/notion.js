@@ -166,7 +166,7 @@ export default async function handler(req, res) {
           if (loyalty) {
             const starsHtml = `<span style="font-size:16px;letter-spacing:2px"><span style="color:#7E8C54">${'\u2605\uFE0E'.repeat(loyalty.pos)}</span><span style="color:#4a4a46">${'\u2605\uFE0E'.repeat(5 - loyalty.pos)}</span></span>`;
             const inner = loyalty.rewardEarned
-              ? `<div style="padding:14px 16px;background:#242a1c;border:1px solid #7E8C54;border-radius:10px;font-size:14px;color:#f0efed;line-height:1.5"><b>You just earned a FREE 1-hour content shoot!</b> That&rsquo;s 5 All-In-One bookings &mdash; I&rsquo;ll reach out to schedule it. &#127881;</div>`
+              ? `<div style="padding:14px 16px;background:#242a1c;border:1px solid #7E8C54;border-radius:10px;font-size:14px;color:#f0efed;line-height:1.5"><div style="font-size:16px;letter-spacing:2px;color:#7E8C54;margin-bottom:6px">${'\u2605\uFE0E'.repeat(5)}</div><b>You just earned a FREE 1-hour content shoot!</b> That&rsquo;s 5 All-In-One bookings &mdash; I&rsquo;ll reach out to schedule it! &#127881;</div>`
               : `<div style="font-size:13px;color:#b5b5b0;line-height:1.6">Loyalty: ${starsHtml} &mdash; ${loyalty.pos}/5 All-In-One shoots. ${5 - loyalty.pos} more for a free 1-hour content shoot.</div>`;
             loyaltyLine = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">${inner}</div>`;
           }
