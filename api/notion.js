@@ -198,11 +198,11 @@ export default async function handler(req, res) {
 <meta charset="utf-8">
 <meta name="color-scheme" content="dark">
 <meta name="supported-color-schemes" content="dark">
-<style>@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@900&display=swap');:root{color-scheme:dark;supported-color-schemes:dark}</style>
+<style>@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@600;900&display=swap');:root{color-scheme:dark;supported-color-schemes:dark}</style>
 </head>
 <body style="margin:0;padding:12px;background:#111110;background-image:linear-gradient(#111110,#111110)">
 <div style="max-width:560px;margin:0 auto;background:#1a1a19;background-image:linear-gradient(#1a1a19,#1a1a19);border-radius:12px;padding:28px 24px;font-family:Arial,Helvetica,sans-serif;color:#f0efed">
-  <h2 style="font-family:'Rubik','Arial Black',Arial,Helvetica,sans-serif;font-weight:900;font-size:20px;letter-spacing:-0.5px;margin:0 0 6px;color:#fff">Booking request received</h2>
+  <h2 style="font-family:'Rubik','Arial Black',Arial,Helvetica,sans-serif;font-weight:600;font-size:20px;letter-spacing:-0.5px;margin:0 0 6px;color:#fff">Booking request received</h2>
   <p style="margin:0 0 18px;color:#9a9a95;font-size:14px;line-height:1.5">Thanks ${firstName}! Your request is pending &mdash; I&rsquo;ll reach out shortly to confirm the date and time. Here&rsquo;s what I have:</p>
   <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${rowsHtml}</table>
   ${priceHtml}
