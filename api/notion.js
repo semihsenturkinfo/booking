@@ -210,7 +210,7 @@ export default async function handler(req, res) {
   <div style="margin-top:22px;padding-top:18px;border-top:1px solid #33332f">
     <p style="margin:0;font-size:14px;color:#b5b5b0">Questions or changes? Just reply to this email.</p>
     <p style="margin:20px 0 0;font-size:14px;color:#b5b5b0">Ciao ciao,</p>
-    <img src="https://semihs.vercel.app/wordmark.png" width="161" alt="SEMIH SENTURK" style="display:block;margin-top:14px;border:0;font-family:'Rubik','Arial Black',Arial,sans-serif;font-weight:900;font-size:20px;color:#f0ede8;letter-spacing:-0.05em">
+    <img src="https://semihs.vercel.app/wordmark.png" width="159" alt="SEMIH SENTURK" style="display:block;margin-top:14px;border:0;font-family:'Rubik','Arial Black',Arial,sans-serif;font-weight:900;font-size:20px;color:#f0ede8;letter-spacing:-0.05em">
     <div style="margin-top:3px;font-size:13px;color:#7E8C54">Videographer &middot; Photographer</div>
   </div>
 </div>
