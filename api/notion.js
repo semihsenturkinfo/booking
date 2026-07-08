@@ -12,7 +12,38 @@ const RL = new Map();
 
 const esc = (s) => String(s == null ? '' : s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 
-// Build the "Booking confirmed" email from stored booking data
+// Rebuild the confirmation email purely from data already stored on the Notion page.
+function pageToEmailData(P) {
+  const getT = (k) => (P[k]?.rich_text || P[k]?.title || []).map(t => t.plain_text).join('');
+  const emailRaw = getT('E-mail');
+  const email = emailRaw.split(',')[0].trim();            // customer is first; ignore any CC
+  const pkg = getT('What services do you need?');
+  const sqft = getT('Approximate square footage');
+  const orientation = getT('Video Orientation');
+  const addr = getT('Property Address');
+  const slot = getT('Time');
+  const name = getT('Agent');
+  const loyText = getT('Loyalty');
+  const dateISO = P['Preferred Shoot Date']?.date?.start || '';
+
+  let dateD = dateISO;
+  if (dateISO) { try { dateD = new Date(dateISO + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) {} }
+
+  const money = (s, re) => { const m = String(s).match(re); return m ? Number(m[1]) : 0; };
+  const base = money(pkg, /CA\$(\d+)/);
+  const sizeUnknown = /not sure/i.test(sqft) || sqft.trim() === '';
+  const size = sizeUnknown ? 0 : money(sqft, /\+CA\$(\d+)/);
+  const orient = money(orientation, /\+CA\$(\d+)/);
+  const estimate = base ? { base, size, orient, ai: 0, total: base + size + orient, sizeUnknown } : null;
+
+  let loyalty = null;
+  const lm = loyText.match(/(\d)\/5/);
+  if (lm) loyalty = { pos: Number(lm[1]), rewardEarned: /FREE SHOOT|EARNED/i.test(loyText) };
+
+  return { name, email, pkg, date: dateISO, dateD, slot, addr, sqft, orientation, estimate, loyalty };
+}
+
+// Build the "Booking confirmed" email HTML from a normalized data object.
 function buildBookingEmail(d) {
   const firstName = esc(String(d.name || '').trim().split(' ')[0] || 'there');
   const pkgStr = String(d.pkg || '');
@@ -48,7 +79,6 @@ function buildBookingEmail(d) {
     loyaltyLine = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">${inner}</div>`;
   }
 
-  // Price estimate (numbers validated; skip section if payload is malformed)
   let priceHtml = '';
   const est = d.estimate;
   const nums = est && [est.base, est.size, est.orient, est.ai, est.total].map(Number);
@@ -122,7 +152,7 @@ export default async function handler(req, res) {
     else RL.set(ip, { n: 1, t: now });
     if (RL.size > 5000) RL.clear();
 
-    // --- GET: confirm link clicked from Notion (own secret; sends the ONE booking email) ---
+    // --- GET: Confirm link clicked from inside the Notion page (sends the ONE booking email) ---
     if (req.method === 'GET') {
       const q = req.query || {};
       const page = (msg) => {
@@ -140,13 +170,9 @@ export default async function handler(req, res) {
       const title = (pg.properties?.['Full Name (1)']?.title || []).map(t => t.plain_text).join('');
       if (title.startsWith('\u2705')) return page('This booking was <b>already confirmed</b> &mdash; no new email sent.');
 
-      const dataRaw = (pg.properties?.['EmailData']?.rich_text || []).map(t => t.plain_text).join('');
-      let d = null;
-      try { d = JSON.parse(dataRaw); } catch (e) {}
-      if (!d || !d.email) return page('&#10060; No email data stored on this booking (older bookings don&rsquo;t have it).');
-
-      const toAddr = String(d.email).trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toAddr) || toAddr.length >= 200) return page('&#10060; Invalid customer email address.');
+      const d = pageToEmailData(pg.properties || {});
+      const toAddr = String(d.email || '').trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toAddr) || toAddr.length >= 200) return page('&#10060; No valid customer email on this booking.');
 
       const { subject, html } = buildBookingEmail(d);
       try {
@@ -197,8 +223,6 @@ export default async function handler(req, res) {
       const pkgStr = String(booking.pkg || '');
 
       // --- Loyalty stars: 1 star per All-In-One purchase, free shoot at 5 ---
-      // Source of truth = the bookings themselves. Count prior non-archived
-      // All-In-One bookings for this customer (by email), then add this one.
       let loyalty = null;
       if (pkgStr.startsWith('All-In-One')) {
         const custEmail = String(booking.email || '').trim().toLowerCase();
@@ -216,9 +240,9 @@ export default async function handler(req, res) {
           else console.error('Loyalty count error:', JSON.stringify(countData));
         } catch (e) { console.error('Loyalty count failed:', e.message); }
 
-        const total = priorCount + 1;                 // include this booking
-        const pos = total % 5 === 0 ? 5 : total % 5;   // 1..5 within current card
-        const rewardEarned = total % 5 === 0;          // hit a multiple of 5
+        const total = priorCount + 1;
+        const pos = total % 5 === 0 ? 5 : total % 5;
+        const rewardEarned = total % 5 === 0;
         const stars = '⭐'.repeat(pos) + '⚪'.repeat(5 - pos);
         loyalty = { pos, total, rewardEarned };
         properties['Loyalty'] = { rich_text: [{ text: { content: `${stars} (${pos}/5)${rewardEarned ? ' 🎁 FREE SHOOT EARNED' : ''}` } }] };
@@ -229,17 +253,6 @@ export default async function handler(req, res) {
       if (isLarge) titleName = '⚠️ ' + titleName + ' ⚠️';
       properties['Full Name (1)'] = { title: [{ text: { content: titleName } }] };
 
-      // Stash everything the confirmation email needs (sent later via the Confirm link)
-      const emailData = {
-        name: String(booking.name || ''), email: String(booking.email || ''),
-        pkg: String(booking.pkg || ''), date: String(booking.date || ''), dateD: String(booking.dateD || ''),
-        slot: String(booking.slot || ''), addr: String(booking.addr || ''), sqft: String(booking.sqft || ''),
-        orientation: String(booking.orientation || ''), estimate: booking.estimate || null,
-        loyalty: loyalty ? { pos: loyalty.pos, rewardEarned: loyalty.rewardEarned } : null
-      };
-      const emailJson = JSON.stringify(emailData).slice(0, 1900);
-      properties['EmailData'] = { rich_text: [{ text: { content: emailJson } }] };
-
       // Package-based colored icon for quick visual scanning in Notion
       let pkgIcon = '⚪';
       if (pkgStr.startsWith('All-In-One')) pkgIcon = '🟢';
@@ -247,7 +260,7 @@ export default async function handler(req, res) {
       else if (pkgStr.startsWith('Listing Video')) pkgIcon = '🟣';
       else if (pkgStr.startsWith('Listing Photos')) pkgIcon = '🟠';
       else if (pkgStr.startsWith('iGUIDE Virtual Tour')) pkgIcon = '🟡';
-      if (rewardEarned) pkgIcon = '🎁'; // reward booking — make it pop in Notion list view
+      if (rewardEarned) pkgIcon = '🎁';
 
       const response = await fetch('https://api.notion.com/v1/pages', {
         method: 'POST', headers: NOTION_HEADERS,
@@ -256,19 +269,23 @@ export default async function handler(req, res) {
       const result = await response.json();
       if (!response.ok) { console.error('Notion create error:', JSON.stringify(result)); return res.status(400).json({ error: result }); }
 
-      // Write the one-click Confirm link onto the page (needs the new pageId)
+      // Add a one-click Confirm link INSIDE the page body (no extra property needed)
       if (process.env.CONFIRM_SECRET) {
         try {
           const confirmUrl = `https://semihs.vercel.app/api/notion?action=confirm&id=${result.id}&k=${process.env.CONFIRM_SECRET}`;
-          await fetch(`https://api.notion.com/v1/pages/${result.id}`, {
+          await fetch(`https://api.notion.com/v1/blocks/${result.id}/children`, {
             method: 'PATCH', headers: NOTION_HEADERS,
-            body: JSON.stringify({ properties: { 'Confirm': { url: confirmUrl } } })
+            body: JSON.stringify({ children: [
+              { object: 'block', type: 'paragraph', paragraph: { rich_text: [
+                { type: 'text', text: { content: '✅ Confirm & send email', link: { url: confirmUrl } },
+                  annotations: { bold: true, color: 'green' } }
+              ] } }
+            ] })
           });
         } catch (e) { console.error('Confirm link write failed:', e.message); }
       }
 
-      // --- Mirror booking to TickTick as a task (for Pomodoro + per-task time tracking) ---
-      // No-op unless TICKTICK_ACCESS_TOKEN is set, so this never blocks a booking.
+      // --- Mirror booking to TickTick (Pomodoro + per-task time tracking); no-op without token ---
       if (process.env.TICKTICK_ACCESS_TOKEN) {
         try {
           const title = (booking.addr || nameStr) + (booking.slot ? ' — ' + booking.slot : '');
@@ -295,7 +312,6 @@ export default async function handler(req, res) {
     }
 
     if (action === 'loyalty_check') {
-      // Pre-submit count of prior non-archived All-In-One bookings for this customer
       const email = String(req.body.email || '').trim().toLowerCase();
       const name = String(req.body.name || '').trim();
       let priorCount = 0;
