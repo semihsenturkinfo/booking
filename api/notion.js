@@ -202,6 +202,28 @@ export default async function handler(req, res) {
       // Honeypot: hidden field bots fill — pretend success, do nothing
       if (String(booking?.website || '').trim()) return res.status(200).json({ pageId: null, loyalty: null });
 
+      // Dedupe: same email + date + slot already exists → don't create again (protects loyalty count too)
+      const dupEmail = String(booking.email || '').trim().toLowerCase();
+      if (dupEmail && booking.date && booking.slot) {
+        try {
+          const dupRes = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
+            method: 'POST', headers: NOTION_HEADERS,
+            body: JSON.stringify({
+              filter: { and: [
+                { property: 'E-mail', rich_text: { contains: dupEmail } },
+                { property: 'Preferred Shoot Date', date: { equals: String(booking.date) } },
+                { property: 'Time', rich_text: { equals: String(booking.slot) } }
+              ] },
+              page_size: 1
+            })
+          });
+          const dupData = await dupRes.json();
+          if (dupRes.ok && (dupData.results || []).length) {
+            return res.status(200).json({ pageId: dupData.results[0].id, loyalty: null, duplicate: true });
+          }
+        } catch (e) { console.error('Dedupe check failed:', e.message); }
+      }
+
       const properties = {};
       if (booking.addr) properties['Property Address'] = { rich_text: [{ text: { content: String(booking.addr) } }] };
       if (booking.date) properties['Preferred Shoot Date'] = { date: { start: String(booking.date) } };
