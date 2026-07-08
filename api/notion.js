@@ -63,9 +63,9 @@ function buildBookingEmail(d) {
     d.orientation ? ['Video', d.orientation] : null,
   ].filter(Boolean);
   const rowsHtml = rows.map(([k, v]) =>
-    `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:baseline;white-space:nowrap">${k}</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${esc(v)}</td></tr>`
+    `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:middle;white-space:nowrap">${k}</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5;vertical-align:middle">${esc(v)}</td></tr>`
   ).join('') + (delivery.length
-    ? `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:baseline;white-space:nowrap">Delivery</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5">${delivery.join('<br>')}</td></tr>`
+    ? `<tr><td style="width:84px;padding:5px 12px 5px 0;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a8a85;vertical-align:middle;white-space:nowrap">Delivery</td><td style="padding:5px 0;font-size:14px;color:#f0efed;line-height:1.5;vertical-align:middle">${delivery.join('<br>')}</td></tr>`
     : '');
 
   let loyaltyLine = '';
