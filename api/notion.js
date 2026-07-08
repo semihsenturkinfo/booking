@@ -188,7 +188,7 @@ export default async function handler(req, res) {
             priceHtml = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #33332f">
   <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a8a85;text-transform:uppercase;margin-bottom:8px">Price estimate</div>
   <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">${pbody}<tr><td style="padding:9px 16px 0 0;font-size:14px;font-weight:600;color:#fff;border-top:1px solid #33332f">Estimated total</td><td style="padding:9px 0 0;font-size:14px;font-weight:700;color:#fff;text-align:right;border-top:1px solid #33332f">${amt}</td></tr></table>
-  <p style="margin:10px 0 0;font-size:12px;color:#8a8a85">Estimate only &mdash; a travel fee applies for properties outside Kitchener-Waterloo${est.sizeUnknown ? ' (property size TBD)' : ''}</p>
+  <p style="margin:10px 0 0;font-size:12px;color:#8a8a85">Estimate only &mdash; a travel fee applies beyond 50 km from Kitchener${est.sizeUnknown ? ' (property size TBD)' : ''}</p>
 </div>`;
           }
 
